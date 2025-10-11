@@ -1,15 +1,78 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/index.vue'
+import Layout from '../views/index.vue'
+import HomeView from '../views/home/HomeView.vue'
+import { setupRouterGuards } from './guards'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes: [
+    // 主应用路由（带布局）
     {
       path: '/',
-      name: 'home',
-      component: HomeView
+      component: Layout,
+      children: [
+        {
+          path: '/',
+          name: 'home',
+          component: HomeView
+        },
+        // 登录相关路由（独立页面）
+        {
+          path: '/login',
+          name: 'login',
+          component: () => import('@/views/login/Login.vue')
+        },
+        {
+          path: '/register',
+          name: 'register',
+          component: () => import('@/views/login/Register.vue')
+        },
+        {
+          path: '/forgot-password',
+          name: 'forgot-password',
+          component: () => import('@/views/login/ForgotPassword.vue')
+        },
+        {
+          path: '/change-password',
+          name: 'change-password',
+          component: () => import('@/views/login/ChangePassword.vue')
+        },
+        {
+          path: 'lab-management',
+          name: 'lab-management',
+          component: () => import('@/views/lab/LabManagement.vue')
+        },
+        {
+          path: 'lab-add',
+          name: 'lab-add',
+          component: () => import('@/views/lab/add-laboratory/index.vue')
+        },
+        {
+          path: 'lab-application',
+          name: 'lab-application',
+          component: () => import('@/views/application/LabApplication.vue')
+        },
+        {
+          path: 'repair-handling',
+          name: 'repair-handling',
+          component: () => import('@/views/repair/RepairHandling.vue')
+        },
+        {
+          path: 'repair-report',
+          name: 'repair-report',
+          component: () => import('@/views/repair/RepairReport.vue')
+        },
+        {
+          path: 'satisfaction',
+          name: 'satisfaction',
+          component: () => import('@/views/satisfaction/Satisfaction.vue')
+        }
+      ]
     }
   ]
 })
+
+// 设置路由守卫
+setupRouterGuards(router)
 
 export default router

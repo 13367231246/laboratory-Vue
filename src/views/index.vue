@@ -15,7 +15,6 @@ const route = useRoute()
 </script>
 <style scoped>
 .web-layout {
-  min-height: 100vh;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -24,6 +23,11 @@ const route = useRoute()
 .main-content {
   flex: 1;
   width: 100%;
-  /* padding-top: 80px; */
+  padding-top: 50px;
+}
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 40px;
+  }
 }
 </style>

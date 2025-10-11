@@ -1,0 +1,158 @@
+.welcome-section {
+  margin-bottom: 24px;
+}
+
+.welcome-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+}
+
+.welcome-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.welcome-title {
+  color: white;
+  margin-bottom: 8px;
+  @media (max-width: 768px) {
+    font-size: 24px;
+  }
+}
+
+.welcome-desc {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  margin-bottom: 0;
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stats-section {
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  text-align: center;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.quick-actions-section {
+  margin-bottom: 24px;
+}
+
+.quick-actions-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-card {
+  border-radius: 8px;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.action-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-icon {
+  font-size: 24px;
+  color: #1890ff;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f8ff;
+  border-radius: 8px;
+}
+
+.action-title {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.action-desc {
+  font-size: 12px;
+  color: #666;
+}
+
+.recent-activities-section {
+  margin-bottom: 24px;
+}
+
+.activities-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-height: 400px;
+}
+
+.activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.activity-time {
+  font-size: 12px;
+  color: #999;
+}
+
+@media (max-width: 768px) {
+  .welcome-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .welcome-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .welcome-actions .ant-btn {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .stat-card {
+    margin-bottom: 16px;
+  }
+
+  .action-card {
+    margin-bottom: 16px;
+  }
+
+  .action-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .action-icon {
+    margin-bottom: 8px;
+  }
+
+  .activities-card {
+    margin-bottom: 16px;
+  }
+}

@@ -1,0 +1,197 @@
+.header {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+/* 防止滚动条影响布局 */
+:global(body) {
+  overflow-x: hidden;
+}
+
+/* 确保页面宽度始终为100vw，不受滚动条影响 */
+:global(html, body) {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+.nav-menu {
+  flex: 1;
+  border: none;
+  margin: 0 40px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.notification-btn {
+  color: #666;
+  font-size: 18px;
+
+  &:hover {
+    color: #1890ff;
+  }
+}
+
+.hamburger-btn {
+  display: none;
+  color: #666;
+  font-size: 18px;
+
+  &:hover {
+    color: #1890ff;
+  }
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.login-btn {
+  background-color: #1890ff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #fff;
+  border-radius: 6px;
+}
+
+/* 移动端下拉菜单样式 */
+.mobile-dropdown-menu {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 100vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* 防止下拉菜单打开时页面滚动条影响布局 */
+:global(.ant-dropdown) {
+  .ant-dropdown-menu {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* 移动端下拉菜单容器样式 */
+:global(.ant-dropdown-placement-bottomRight) {
+  .ant-dropdown-menu {
+    margin: 0;
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* 防止下拉菜单打开时页面布局偏移 */
+:global(.ant-dropdown) {
+  .ant-dropdown-menu {
+    transform: none !important;
+  }
+}
+
+/* 确保下拉菜单不会影响页面滚动 */
+:global(.ant-dropdown-open) {
+  body {
+    overflow: hidden;
+  }
+}
+
+/* 悬停触发优化 */
+:global(.ant-dropdown) {
+  .ant-dropdown-menu {
+    transition: all 0.2s ease;
+  }
+}
+
+/* 移动端悬停支持 */
+@media (max-width: 768px) {
+  .hamburger-btn:hover {
+    background-color: rgba(24, 144, 255, 0.1);
+  }
+
+  .user-info:hover {
+    background-color: rgba(24, 144, 255, 0.1);
+  }
+}
+
+.close-btn {
+  color: #666;
+  font-size: 18px;
+
+  &:hover {
+    color: #1890ff;
+  }
+}
+
+.mobile-menu {
+  border: none;
+
+  .ant-menu-item {
+    height: 48px;
+    line-height: 48px;
+    margin: 0;
+    padding: 0 20px;
+    font-size: 16px;
+  }
+}
+
+/* 移动端适配 - 768px以下 */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 0 16px;
+    height: 60px;
+  }
+
+  .desktop-menu {
+    display: none;
+  }
+
+  .hamburger-btn {
+    display: block;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+
+  .desktop-username {
+    display: none;
+  }
+
+  .user-info {
+    padding: 2px 4px;
+  }
+
+  .notification-btn {
+    font-size: 16px;
+  }
+}
