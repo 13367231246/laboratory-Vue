@@ -43,7 +43,7 @@
     <!-- 搜索和筛选 -->
     <a-card class="search-card">
       <div class="search-filters">
-        <a-input v-model:value="searchText" placeholder="搜索" allow-clear class="search-input">
+        <a-input v-model:value="searchText" placeholder="根据名称和位置搜索" allow-clear class="search-input">
           <template #prefix>
             <SearchOutlined />
           </template>
@@ -456,7 +456,7 @@ onMounted(() => {
   margin-top: 10px;
 }
 .stats-section {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .stat-card {
@@ -466,7 +466,7 @@ onMounted(() => {
 }
 
 .search-card {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }

@@ -43,26 +43,30 @@
     <!-- 搜索和筛选 -->
     <a-card class="search-card">
       <div class="search-filters">
-        <a-input v-model:value="searchText" placeholder="搜索设备名称或报修人" allow-clear @change="handleSearch" style="width: 250px">
+        <a-input v-model:value="searchText" placeholder="搜索设备名称或报修人" allow-clear @change="handleSearch" class="search-input">
           <template #prefix>
             <SearchOutlined />
           </template>
         </a-input>
 
-        <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter" style="width: 250px">
+        <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter" class="search-input">
           <a-select-option value="0">等待维修</a-select-option>
           <a-select-option value="1">维修中</a-select-option>
           <a-select-option value="2">完成维修</a-select-option>
         </a-select>
 
-        <a-select v-model:value="urgencyFilter" placeholder="紧急程度" allow-clear @change="handleFilter" style="width: 250px">
+        <a-select v-model:value="urgencyFilter" placeholder="紧急程度" allow-clear @change="handleFilter" class="search-input">
           <a-select-option value="low">低</a-select-option>
           <a-select-option value="medium">中</a-select-option>
           <a-select-option value="high">高</a-select-option>
           <a-select-option value="critical">紧急</a-select-option>
         </a-select>
 
-        <a-button type="primary" @click="handleRefresh" :loading="loading">
+        <a-button type="primary" @click="handleSearch" :loading="loading" class="btn">
+          <SearchOutlined />
+          搜索
+        </a-button>
+        <a-button type="primary" @click="handleRefresh" :loading="loading" class="btn">
           <ReloadOutlined />
           刷新
         </a-button>
@@ -71,7 +75,7 @@
 
     <!-- 维修列表 -->
     <a-card class="repair-list-card">
-      <a-table :columns="columns" :data-source="filteredRepairs" :loading="loading" :pagination="pagination" row-key="id" @change="handleTableChange">
+      <a-table :columns="columns" :data-source="filteredRepairs" :scroll="{ x: 800 }" :loading="loading" :pagination="pagination" row-key="id" @change="handleTableChange">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
             <a-tag :color="getStatusColor(record.status)">
@@ -434,12 +438,11 @@ const getRepairTypeText = (type) => {
   return typeMap[type] || '未知'
 }
 
-const handleSearch = () => {
-  // 搜索逻辑已在计算属性中处理
-}
-
 const handleFilter = () => {
   // 筛选逻辑已在计算属性中处理
+}
+const handleSearch = () => {
+  console.log('搜索')
 }
 
 const handleRefresh = async () => {
@@ -538,9 +541,9 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .stats-section {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .stat-card {
@@ -551,7 +554,7 @@ onMounted(() => {
 
 .search-card {
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -559,8 +562,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 }
-
+.search-input {
+  width: 240px;
+  min-width: 200px;
+}
 .repair-list-card {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -604,10 +613,6 @@ onMounted(() => {
 
 /* 移动端适配 - 768px以下 */
 @media (max-width: 768px) {
-  .repair-handling-page {
-    padding: 16px;
-  }
-
   .stats-section {
     margin-bottom: 16px;
   }
@@ -635,6 +640,10 @@ onMounted(() => {
 
   .page-header-extra .ant-btn {
     width: 100%;
+  }
+  .search-input {
+    width: 100%;
+    min-width: auto;
   }
 }
 </style>

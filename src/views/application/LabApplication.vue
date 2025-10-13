@@ -496,6 +496,9 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+.lab-application-page {
+  margin-top: 10px;
+}
 .lab-info {
   margin-bottom: 16px;
 }

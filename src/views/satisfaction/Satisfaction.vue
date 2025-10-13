@@ -146,7 +146,6 @@
             <a-space>
               <a-button type="primary" html-type="submit" :loading="submitting"> 提交评价 </a-button>
               <a-button @click="handleReset">重置</a-button>
-              <a-button @click="handlePreview">预览评价</a-button>
             </a-space>
           </a-form>
         </a-card>
@@ -199,50 +198,6 @@
         </a-card>
       </a-col>
     </a-row>
-
-    <!-- 评价预览模态框 -->
-    <a-modal v-model:open="previewVisible" title="评价预览" width="800px" :footer="null">
-      <div class="preview-content" v-if="formData.labId">
-        <a-descriptions :column="1" bordered>
-          <a-descriptions-item label="实验室">
-            {{ selectedLab?.name }}
-          </a-descriptions-item>
-          <a-descriptions-item label="整体满意度">
-            <a-rate :value="formData.overallSatisfaction" disabled />
-          </a-descriptions-item>
-          <a-descriptions-item label="环境评价">
-            <div class="preview-ratings">
-              <div>清洁度: <a-rate :value="formData.environmentRating.cleanliness" disabled size="small" /></div>
-              <div>温度: <a-rate :value="formData.environmentRating.temperature" disabled size="small" /></div>
-              <div>照明: <a-rate :value="formData.environmentRating.lighting" disabled size="small" /></div>
-              <div>噪音: <a-rate :value="formData.environmentRating.noise" disabled size="small" /></div>
-            </div>
-          </a-descriptions-item>
-          <a-descriptions-item label="设备评价">
-            <div class="preview-ratings">
-              <div>设备完好性: <a-rate :value="formData.equipmentRating.condition" disabled size="small" /></div>
-              <div>设备性能: <a-rate :value="formData.equipmentRating.performance" disabled size="small" /></div>
-              <div>设备数量: <a-rate :value="formData.equipmentRating.quantity" disabled size="small" /></div>
-              <div>设备易用性: <a-rate :value="formData.equipmentRating.usability" disabled size="small" /></div>
-            </div>
-          </a-descriptions-item>
-          <a-descriptions-item label="服务评价">
-            <div class="preview-ratings">
-              <div>申请流程: <a-rate :value="formData.serviceRating.application" disabled size="small" /></div>
-              <div>响应速度: <a-rate :value="formData.serviceRating.response" disabled size="small" /></div>
-              <div>技术支持: <a-rate :value="formData.serviceRating.support" disabled size="small" /></div>
-              <div>问题解决: <a-rate :value="formData.serviceRating.problemSolving" disabled size="small" /></div>
-            </div>
-          </a-descriptions-item>
-          <a-descriptions-item label="推荐意愿">
-            {{ getRecommendationText(formData.recommendation) }}
-          </a-descriptions-item>
-          <a-descriptions-item label="改进建议" :span="2">
-            {{ formData.suggestions || '无' }}
-          </a-descriptions-item>
-        </a-descriptions>
-      </div>
-    </a-modal>
   </div>
 </template>
 
@@ -347,11 +302,6 @@ const recentReviews = ref([
   }
 ])
 
-// 计算属性
-const selectedLab = computed(() => {
-  return usedLabs.value.find((lab) => lab.id === formData.labId)
-})
-
 // 方法
 const filterOption = (input, option) => {
   return option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
@@ -362,16 +312,6 @@ const handleLabChange = (value) => {
   if (lab) {
     formData.usageTime = lab.usageTime
   }
-}
-
-const getRecommendationText = (value) => {
-  const textMap = {
-    high: '非常愿意推荐',
-    medium: '愿意推荐',
-    low: '不太愿意推荐',
-    none: '不愿意推荐'
-  }
-  return textMap[value] || '未知'
 }
 
 const handleSubmit = async () => {
@@ -406,14 +346,6 @@ const handleReset = () => {
   })
 }
 
-const handlePreview = () => {
-  if (!formData.labId) {
-    message.warning('请先选择实验室')
-    return
-  }
-  previewVisible.value = true
-}
-
 // 生命周期
 onMounted(() => {
   // 加载数据
@@ -421,6 +353,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.satisfaction-page {
+  margin-top: 10px;
+}
+
 .satisfaction-form-card,
 .stats-card,
 .recent-reviews-card {
@@ -492,23 +428,6 @@ onMounted(() => {
   justify-content: space-between;
   font-size: 12px;
   color: #999;
-}
-
-.preview-content {
-  padding: 16px 0;
-}
-
-.preview-ratings {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.preview-ratings > div {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
 }
 
 /* 移动端适配 - 768px以下 */

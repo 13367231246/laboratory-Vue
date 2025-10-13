@@ -1,7 +1,7 @@
 <template>
   <div class="application-record-page">
     <!-- 筛选和搜索 -->
-    <a-card class="filter-card">
+    <div class="filter-card">
       <div class="filter-section">
         <div class="filter-left">
           <a-select v-model:value="filterType" placeholder="申请类型筛选" allow-clear @change="handleFilterChange" class="type-filter">
@@ -33,11 +33,11 @@
           </a-button>
         </div>
       </div>
-    </a-card>
+    </div>
 
     <!-- 申请记录列表 -->
-    <a-card class="record-list-card">
-      <a-table :columns="columns" :data-source="filteredRecords" :loading="loading" :scroll="{ x: 1000 }" :pagination="pagination" row-key="id" @change="handleTableChange">
+    <div class="record-list-card">
+      <a-table :columns="columns" :data-source="filteredRecords" :loading="loading" :scroll="{ x: 800 }" :pagination="pagination" row-key="id" @change="handleTableChange">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'type'">
             <div>
@@ -66,7 +66,7 @@
           </template>
         </template>
       </a-table>
-    </a-card>
+    </div>
 
     <!-- 详情模态框 -->
     <a-modal v-model:open="detailModalVisible" title="申请详情" width="800px" :footer="null">
@@ -246,8 +246,7 @@ const columns = [
     title: '申请类型',
     dataIndex: 'type',
     key: 'type',
-    width: 100,
-    fixed: 'left'
+    width: 100
   },
   {
     title: '申请人',
@@ -285,7 +284,7 @@ const columns = [
   {
     title: '操作',
     key: 'actions',
-    width: 150,
+    width: 120,
     fixed: 'right'
   }
 ]
@@ -436,9 +435,14 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .filter-card {
+  padding: 16px;
   margin-bottom: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  @media (max-width: 768px) {
+    padding: 0px;
+    box-shadow: none;
+  }
 }
 
 .filter-section {
@@ -475,8 +479,13 @@ onMounted(() => {
 }
 
 .record-list-card {
+  padding: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  @media (max-width: 768px) {
+    padding: 0px;
+    box-shadow: none;
+  }
 }
 
 .detail-content {
@@ -488,7 +497,7 @@ onMounted(() => {
 /* 移动端适配 */
 @media (max-width: 768px) {
   .application-record-page {
-    padding: 12px;
+    margin-top: 10px;
   }
 
   .filter-section {
