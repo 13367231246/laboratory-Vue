@@ -1,38 +1,46 @@
 # Laboratory-Vue
 
-This template should help get you started developing with Vue 3 in Vite.
+这个模板可以帮助你使用 Vue 3 和 Vite 快速开始开发项目。
 
-## Recommended IDE Setup
+## 推荐的 IDE 配置
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **VS Code** + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+  - 安装后请**禁用 Vetur**，避免与 Volar 冲突。
 
-## Recommended Browser Setup
+## 推荐的浏览器配置
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- **基于 Chromium 的浏览器**（Chrome、Edge、Brave 等）：
+  - [Vue.js devtools 扩展](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
+  - [在 Chrome DevTools 中开启自定义对象格式化器](http://bit.ly/object-formatters)
+- **Firefox 浏览器**：
+  - [Vue.js devtools 扩展](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
+  - [在 Firefox DevTools 中开启自定义对象格式化器](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
 
-## Customize configuration
+## 自定义配置
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+更多 Vite 配置选项，请参考 [Vite 官方配置文档](https://vite.dev/config/)。
 
-## Project Setup
+## 项目初始化
 
-```sh
+```bash
 pnpm install
+
 ```
 
-### Compile and Hot-Reload for Development
+## 开发环境：编译并启用热重载
 
-```sh
+```bash
 pnpm dev
 ```
 
-### Compile and Minify for Production
+## 生产环境：编译并压缩打包
 
-```sh
+```bash
 pnpm build
+```
+
+💡 提示：确保你已安装 pnpm。若未安装，可通过 npm install -g pnpm 安装
+
+```bash
+npm install -g pnpm
 ```
