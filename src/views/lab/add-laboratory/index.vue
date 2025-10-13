@@ -186,7 +186,7 @@ const removeEquipment = (index) => {
 
 <style scoped lang="scss">
 .form-card {
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .equipment-section {

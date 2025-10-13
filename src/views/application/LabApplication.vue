@@ -3,36 +3,60 @@
     <a-card title="申请信息" class="application-form-card">
       <a-form ref="formRef" :model="formData" :rules="formRules" @finish="handleSubmit">
         <a-form-item label="申请类型" name="applicationType">
-          <a-radio-group v-model:value="formData.applicationType">
+          <a-radio-group v-model:value="formData.applicationType" @change="handleApplicationTypeChange">
+            <a-radio value="lab">申请实验室</a-radio>
+            <a-radio value="equipment">申请设备</a-radio>
+          </a-radio-group>
+        </a-form-item>
+
+        <a-form-item label="使用类型" name="usageType">
+          <a-radio-group v-model:value="formData.usageType">
             <a-radio value="personal">个人使用</a-radio>
             <a-radio value="course">课程使用</a-radio>
           </a-radio-group>
         </a-form-item>
 
-        <a-form-item label="选择实验室" name="labId">
-          <a-select v-model:value="formData.labId" placeholder="请选择要申请的实验室" show-search :filter-option="filterOption" @change="handleLabChange">
-            <a-select-option v-for="lab in availableLabs" :key="lab.id" :value="lab.id" :disabled="lab.status !== 0">
-              {{ lab.name }} - {{ lab.location }}
-              <a-tag :color="getLabStatusColor(lab.status)" size="small">
-                {{ getLabStatusText(lab.status) }}
-              </a-tag>
-            </a-select-option>
-          </a-select>
-        </a-form-item>
+        <!-- 申请实验室时的表单 -->
+        <template v-if="formData.applicationType === 'lab'">
+          <a-form-item label="选择实验室" name="labId">
+            <a-select v-model:value="formData.labId" placeholder="请选择要申请的实验室" show-search :filter-option="filterOption" @change="handleLabChange">
+              <a-select-option v-for="lab in availableLabs" :key="lab.id" :value="lab.id" :disabled="lab.status !== 0">
+                {{ lab.name }} - {{ lab.location }}
+                <a-tag :color="getLabStatusColor(lab.status)" size="small">
+                  {{ getLabStatusText(lab.status) }}
+                </a-tag>
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+        </template>
+
+        <!-- 申请设备时的表单 -->
+        <template v-if="formData.applicationType === 'equipment'">
+          <a-form-item label="选择设备" name="equipmentId">
+            <a-select v-model:value="formData.equipmentId" placeholder="请选择要申请的设备" show-search :filter-option="filterEquipmentOption" @change="handleEquipmentChange">
+              <a-select-option v-for="equipment in availableEquipment" :key="equipment.id" :value="equipment.id" :disabled="equipment.status !== 0">
+                {{ equipment.name }} - {{ equipment.model }}
+                <a-tag :color="getEquipmentStatusColor(equipment.status)" size="small">
+                  {{ getEquipmentStatusText(equipment.status) }}
+                </a-tag>
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+        </template>
 
         <a-form-item label="使用目的" name="purpose">
-          <a-textarea v-model:value="formData.purpose" placeholder="请详细描述使用实验室的目的和内容" :rows="3" />
+          <a-textarea v-model:value="formData.purpose" :placeholder="formData.applicationType === 'lab' ? '请详细描述使用实验室的目的和内容' : '请详细描述使用设备的目的和内容'" :rows="3" />
         </a-form-item>
 
         <a-form-item label="使用时间" name="timeRange">
           <a-range-picker v-model:value="formData.timeRange" show-time format="YYYY-MM-DD HH:mm" :disabled-date="disabledDate" :disabled-time="disabledTime" />
         </a-form-item>
 
-        <a-form-item label="预计人数" name="participantCount">
-          <a-input-number v-model:value="formData.participantCount" :min="1" :max="selectedLab?.capacity || 50" />
+        <a-form-item :label="formData.applicationType === 'lab' ? '预计人数' : '借用数量'" name="participantCount">
+          <a-input-number v-model:value="formData.participantCount" :min="1" :max="formData.applicationType === 'lab' ? selectedLab?.capacity || 50 : selectedEquipment?.quantity || 10" />
         </a-form-item>
 
-        <a-form-item label="所需设备" name="requiredEquipment">
+        <a-form-item v-if="formData.applicationType === 'lab'" label="所需设备" name="requiredEquipment">
           <a-select v-model:value="formData.requiredEquipment" mode="multiple" placeholder="选择需要的设备（可选）" :options="equipmentOptions" />
         </a-form-item>
 
@@ -52,7 +76,8 @@
       </a-form>
     </a-card>
 
-    <a-card title="实验室信息" class="lab-info-card" v-if="selectedLab">
+    <!-- 实验室信息卡片 -->
+    <a-card v-if="formData.applicationType === 'lab' && selectedLab" title="实验室信息" class="lab-info-card">
       <div class="lab-info">
         <a-descriptions :column="1" size="small">
           <a-descriptions-item label="实验室名称">
@@ -97,6 +122,32 @@
       </div>
     </a-card>
 
+    <!-- 设备信息卡片 -->
+    <a-card v-if="formData.applicationType === 'equipment' && selectedEquipment" title="设备信息" class="equipment-info-card">
+      <div class="equipment-info">
+        <a-descriptions :column="1" size="small">
+          <a-descriptions-item label="设备名称">
+            {{ selectedEquipment.name }}
+          </a-descriptions-item>
+          <a-descriptions-item label="型号">
+            {{ selectedEquipment.model }}
+          </a-descriptions-item>
+          <a-descriptions-item label="可用数量"> {{ selectedEquipment.quantity }} 台 </a-descriptions-item>
+          <a-descriptions-item label="当前状态">
+            <a-tag :color="getEquipmentStatusColor(selectedEquipment.status)">
+              {{ getEquipmentStatusText(selectedEquipment.status) }}
+            </a-tag>
+          </a-descriptions-item>
+          <a-descriptions-item label="存放位置">
+            {{ selectedEquipment.location }}
+          </a-descriptions-item>
+          <a-descriptions-item label="负责人">
+            {{ selectedEquipment.manager }}
+          </a-descriptions-item>
+        </a-descriptions>
+      </div>
+    </a-card>
+
     <!-- 申请须知 -->
     <a-card title="申请须知" class="notice-card">
       <a-list size="small" :data-source="notices">
@@ -113,22 +164,26 @@
 
     <!-- 申请预览模态框 -->
     <a-modal v-model:open="previewVisible" title="申请预览" width="800px" :footer="null">
-      <div class="preview-content" v-if="formData.labId">
+      <div class="preview-content" v-if="(formData.applicationType === 'lab' && formData.labId) || (formData.applicationType === 'equipment' && formData.equipmentId)">
         <a-descriptions :column="2" bordered>
           <a-descriptions-item label="申请类型">
-            {{ formData.applicationType === 'personal' ? '个人使用' : '课程使用' }}
+            {{ formData.applicationType === 'lab' ? '申请实验室' : '申请设备' }}
           </a-descriptions-item>
-          <a-descriptions-item label="实验室">
+          <a-descriptions-item label="使用类型">
+            {{ formData.usageType === 'personal' ? '个人使用' : '课程使用' }}
+          </a-descriptions-item>
+          <a-descriptions-item v-if="formData.applicationType === 'lab'" label="实验室">
             {{ selectedLab?.name }}
           </a-descriptions-item>
+          <a-descriptions-item v-if="formData.applicationType === 'equipment'" label="设备"> {{ selectedEquipment?.name }} ({{ selectedEquipment?.model }}) </a-descriptions-item>
           <a-descriptions-item label="使用目的" :span="2">
             {{ formData.purpose }}
           </a-descriptions-item>
           <a-descriptions-item label="使用时间">
             {{ formatTimeRange(formData.timeRange) }}
           </a-descriptions-item>
-          <a-descriptions-item label="预计人数"> {{ formData.participantCount }} 人 </a-descriptions-item>
-          <a-descriptions-item label="所需设备" :span="2">
+          <a-descriptions-item :label="formData.applicationType === 'lab' ? '预计人数' : '借用数量'"> {{ formData.participantCount }} {{ formData.applicationType === 'lab' ? '人' : '台' }} </a-descriptions-item>
+          <a-descriptions-item v-if="formData.applicationType === 'lab'" label="所需设备" :span="2">
             {{ formData.requiredEquipment?.join(', ') || '无' }}
           </a-descriptions-item>
           <a-descriptions-item label="特殊要求" :span="2">
@@ -158,8 +213,10 @@ const previewVisible = ref(false)
 
 // 表单数据
 const formData = reactive({
-  applicationType: 'personal',
+  applicationType: 'lab',
+  usageType: 'personal',
   labId: undefined,
+  equipmentId: undefined,
   purpose: '',
   timeRange: [],
   participantCount: 1,
@@ -171,10 +228,12 @@ const formData = reactive({
 // 表单验证规则
 const formRules = {
   applicationType: [{ required: true, message: '请选择申请类型', trigger: 'change' }],
+  usageType: [{ required: true, message: '请选择使用类型', trigger: 'change' }],
   labId: [{ required: true, message: '请选择实验室', trigger: 'change' }],
+  equipmentId: [{ required: true, message: '请选择设备', trigger: 'change' }],
   purpose: [{ required: true, message: '请填写使用目的', trigger: 'blur' }],
   timeRange: [{ required: true, message: '请选择使用时间', trigger: 'change' }],
-  participantCount: [{ required: true, message: '请填写预计人数', trigger: 'blur' }],
+  participantCount: [{ required: true, message: '请填写数量', trigger: 'blur' }],
   contactInfo: [{ required: true, message: '请填写联系方式', trigger: 'blur' }]
 }
 
@@ -224,6 +283,55 @@ const availableLabs = ref([
   }
 ])
 
+// 可用设备数据
+const availableEquipment = ref([
+  {
+    id: 1,
+    name: '笔记本电脑',
+    model: 'Dell Latitude 5520',
+    status: 0,
+    quantity: 5,
+    location: '计算机实验室A',
+    manager: '张老师'
+  },
+  {
+    id: 2,
+    name: '投影仪',
+    model: 'Epson CB-X41',
+    status: 0,
+    quantity: 3,
+    location: '计算机实验室A',
+    manager: '张老师'
+  },
+  {
+    id: 3,
+    name: '示波器',
+    model: 'Tektronix TBS1000',
+    status: 0,
+    quantity: 2,
+    location: '物理实验室B',
+    manager: '李老师'
+  },
+  {
+    id: 4,
+    name: '万用表',
+    model: 'Fluke 115',
+    status: 1,
+    quantity: 8,
+    location: '物理实验室B',
+    manager: '李老师'
+  },
+  {
+    id: 5,
+    name: '显微镜',
+    model: 'Olympus CX23',
+    status: 0,
+    quantity: 4,
+    location: '化学实验室C',
+    manager: '王老师'
+  }
+])
+
 // 设备选项
 const equipmentOptions = ref([
   { label: '台式电脑', value: 'desktop' },
@@ -259,14 +367,33 @@ const selectedLab = computed(() => {
   return availableLabs.value.find((lab) => lab.id === formData.labId)
 })
 
+const selectedEquipment = computed(() => {
+  return availableEquipment.value.find((equipment) => equipment.id === formData.equipmentId)
+})
+
 // 方法
 const filterOption = (input, option) => {
   return option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
 }
 
+const filterEquipmentOption = (input, option) => {
+  return option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+}
+
+const handleApplicationTypeChange = () => {
+  // 清空选择
+  formData.labId = undefined
+  formData.equipmentId = undefined
+  formData.requiredEquipment = []
+}
+
 const handleLabChange = (value) => {
   // 清空设备选择
   formData.requiredEquipment = []
+}
+
+const handleEquipmentChange = (value) => {
+  // 设备选择变化时的处理
 }
 
 const disabledDate = (current) => {
@@ -351,8 +478,12 @@ const handleReset = () => {
 }
 
 const handlePreview = () => {
-  if (!formData.labId) {
+  if (formData.applicationType === 'lab' && !formData.labId) {
     message.warning('请先选择实验室')
+    return
+  }
+  if (formData.applicationType === 'equipment' && !formData.equipmentId) {
+    message.warning('请先选择设备')
     return
   }
   previewVisible.value = true
@@ -365,9 +496,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.lab-application-page {
-  margin-top: 10px;
-}
 .lab-info {
   margin-bottom: 16px;
 }

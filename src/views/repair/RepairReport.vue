@@ -390,6 +390,12 @@ const handlePreview = () => {
 // 生命周期
 onMounted(() => {
   // 加载数据
+  // 检查是否有从申请记录页面传递的参数
+  const route = useRouter().currentRoute.value
+  if (route.query.labId) {
+    formData.labId = parseInt(route.query.labId)
+    formData.contactInfo = route.query.applicant || ''
+  }
 })
 </script>
 

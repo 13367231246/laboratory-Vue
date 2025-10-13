@@ -42,29 +42,31 @@
 
     <!-- 搜索和筛选 -->
     <a-card class="search-card">
-      <a-input v-model:value="searchText" placeholder="搜索设备名称或报修人" allow-clear @change="handleSearch" style="width: 250px">
-        <template #prefix>
-          <SearchOutlined />
-        </template>
-      </a-input>
+      <div class="search-filters">
+        <a-input v-model:value="searchText" placeholder="搜索设备名称或报修人" allow-clear @change="handleSearch" style="width: 250px">
+          <template #prefix>
+            <SearchOutlined />
+          </template>
+        </a-input>
 
-      <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter" style="width: 250px">
-        <a-select-option value="0">等待维修</a-select-option>
-        <a-select-option value="1">维修中</a-select-option>
-        <a-select-option value="2">完成维修</a-select-option>
-      </a-select>
+        <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter" style="width: 250px">
+          <a-select-option value="0">等待维修</a-select-option>
+          <a-select-option value="1">维修中</a-select-option>
+          <a-select-option value="2">完成维修</a-select-option>
+        </a-select>
 
-      <a-select v-model:value="urgencyFilter" placeholder="紧急程度" allow-clear @change="handleFilter" style="width: 250px">
-        <a-select-option value="low">低</a-select-option>
-        <a-select-option value="medium">中</a-select-option>
-        <a-select-option value="high">高</a-select-option>
-        <a-select-option value="critical">紧急</a-select-option>
-      </a-select>
+        <a-select v-model:value="urgencyFilter" placeholder="紧急程度" allow-clear @change="handleFilter" style="width: 250px">
+          <a-select-option value="low">低</a-select-option>
+          <a-select-option value="medium">中</a-select-option>
+          <a-select-option value="high">高</a-select-option>
+          <a-select-option value="critical">紧急</a-select-option>
+        </a-select>
 
-      <a-button type="primary" @click="handleRefresh" :loading="loading">
-        <ReloadOutlined />
-        刷新
-      </a-button>
+        <a-button type="primary" @click="handleRefresh" :loading="loading">
+          <ReloadOutlined />
+          刷新
+        </a-button>
+      </div>
     </a-card>
 
     <!-- 维修列表 -->
@@ -89,7 +91,6 @@
 
           <template v-else-if="column.key === 'actions'">
             <a-space>
-              <a-button type="link" size="small" @click="startRepair(record)" v-if="record.status === 0"> 开始维修 </a-button>
               <a-button type="link" size="small" @click="completeRepair(record)" v-if="record.status === 1"> 完成维修 </a-button>
               <a-button type="link" size="small" @click="viewDetail(record)"> 详情 </a-button>
               <a-button type="link" size="small" @click="editRepair(record)"> 编辑 </a-button>
@@ -159,27 +160,6 @@
       </div>
     </a-modal>
 
-    <!-- 开始维修模态框 -->
-    <a-modal v-model:open="startRepairModalVisible" title="开始维修" @ok="handleStartRepair" @cancel="handleStartRepairCancel">
-      <a-form ref="startRepairFormRef" :model="startRepairFormData" :rules="startRepairFormRules" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
-        <a-form-item label="维修方案" name="solution">
-          <a-textarea v-model:value="startRepairFormData.solution" placeholder="请描述维修方案和步骤" :rows="4" />
-        </a-form-item>
-
-        <a-form-item label="预计完成时间" name="estimatedTime">
-          <a-date-picker v-model:value="startRepairFormData.estimatedTime" show-time format="YYYY-MM-DD HH:mm" style="width: 100%" />
-        </a-form-item>
-
-        <a-form-item label="所需工具" name="tools">
-          <a-select v-model:value="startRepairFormData.tools" mode="multiple" placeholder="选择需要的工具" :options="toolOptions" />
-        </a-form-item>
-
-        <a-form-item label="备注" name="notes">
-          <a-textarea v-model:value="startRepairFormData.notes" placeholder="其他备注信息" :rows="2" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
-
     <!-- 完成维修模态框 -->
     <a-modal v-model:open="completeRepairModalVisible" title="完成维修" @ok="handleCompleteRepair" @cancel="handleCompleteRepairCancel">
       <a-form ref="completeRepairFormRef" :model="completeRepairFormData" :rules="completeRepairFormRules" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
@@ -226,7 +206,6 @@ const searchText = ref('')
 const statusFilter = ref(undefined)
 const urgencyFilter = ref(undefined)
 const detailModalVisible = ref(false)
-const startRepairModalVisible = ref(false)
 const completeRepairModalVisible = ref(false)
 const selectedRepair = ref(null)
 
@@ -371,29 +350,6 @@ const columns = [
   }
 ]
 
-// 工具选项
-const toolOptions = ref([
-  { label: '螺丝刀', value: 'screwdriver' },
-  { label: '万用表', value: 'multimeter' },
-  { label: '电烙铁', value: 'soldering_iron' },
-  { label: '测试仪', value: 'tester' },
-  { label: '清洁工具', value: 'cleaning_tools' }
-])
-
-// 开始维修表单数据
-const startRepairFormData = reactive({
-  solution: '',
-  estimatedTime: undefined,
-  tools: [],
-  notes: ''
-})
-
-// 开始维修表单验证规则
-const startRepairFormRules = {
-  solution: [{ required: true, message: '请输入维修方案', trigger: 'blur' }],
-  estimatedTime: [{ required: true, message: '请选择预计完成时间', trigger: 'change' }]
-}
-
 // 完成维修表单数据
 const completeRepairFormData = reactive({
   result: 'success',
@@ -518,43 +474,9 @@ const editRepair = (record) => {
   message.info('编辑维修记录功能开发中...')
 }
 
-const startRepair = (record) => {
-  selectedRepair.value = record
-  startRepairModalVisible.value = true
-}
-
 const completeRepair = (record) => {
   selectedRepair.value = record
   completeRepairModalVisible.value = true
-}
-
-const handleStartRepair = async () => {
-  try {
-    // 模拟API调用
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // 更新维修状态
-    selectedRepair.value.status = 1
-    selectedRepair.value.repairRecords.push({
-      id: Date.now(),
-      title: '开始维修',
-      description: startRepairFormData.solution,
-      operator: '当前用户',
-      time: new Date().toLocaleString(),
-      status: 'completed'
-    })
-
-    message.success('维修已开始')
-    startRepairModalVisible.value = false
-    resetStartRepairForm()
-  } catch (error) {
-    message.error('操作失败')
-  }
-}
-
-const handleStartRepairCancel = () => {
-  startRepairModalVisible.value = false
-  resetStartRepairForm()
 }
 
 const handleCompleteRepair = async () => {
@@ -600,15 +522,6 @@ const beforeUpload = (file) => {
   return false // 阻止自动上传
 }
 
-const resetStartRepairForm = () => {
-  Object.assign(startRepairFormData, {
-    solution: '',
-    estimatedTime: undefined,
-    tools: [],
-    notes: ''
-  })
-}
-
 const resetCompleteRepairForm = () => {
   Object.assign(completeRepairFormData, {
     result: 'success',
@@ -637,13 +550,15 @@ onMounted(() => {
 }
 
 .search-card {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   gap: 10px;
   margin-bottom: 24px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.search-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .repair-list-card {

@@ -35,7 +35,7 @@
                 </a-menu-item>
                 <a-menu-item key="settings">
                   <SettingOutlined />
-                  设置
+                  用户设置
                 </a-menu-item>
                 <a-menu-divider />
                 <a-menu-item key="logout">
@@ -109,6 +109,11 @@ const menuItems = computed(() => {
         label: '申请实验室'
       },
       {
+        key: 'application-record',
+        icon: () => h(FileTextOutlined),
+        label: '申请记录'
+      },
+      {
         key: 'repair-handling',
         icon: () => h(ToolOutlined),
         label: '维修处理'
@@ -123,18 +128,11 @@ const menuItems = computed(() => {
   }
 
   // 所有用户都有的菜单
-  baseItems.push(
-    {
-      key: 'repair-report',
-      icon: () => h(ToolOutlined),
-      label: '设备报修'
-    },
-    {
-      key: 'satisfaction',
-      icon: () => h(TeamOutlined),
-      label: '满意度评价'
-    }
-  )
+  baseItems.push({
+    key: 'satisfaction',
+    icon: () => h(TeamOutlined),
+    label: '满意度评价'
+  })
 
   return baseItems
 })
@@ -163,6 +161,11 @@ const mobileMenuItems = computed(() => {
         label: '申请实验室'
       },
       {
+        key: 'application-record',
+        icon: () => h(FileTextOutlined),
+        label: '申请记录'
+      },
+      {
         key: 'repair-handling',
         icon: () => h(ToolOutlined),
         label: '维修处理'
@@ -177,18 +180,11 @@ const mobileMenuItems = computed(() => {
   }
 
   // 所有用户都有的菜单
-  baseItems.push(
-    {
-      key: 'repair-report',
-      icon: () => h(ToolOutlined),
-      label: '设备报修'
-    },
-    {
-      key: 'satisfaction',
-      icon: () => h(TeamOutlined),
-      label: '满意度评价'
-    }
-  )
+  baseItems.push({
+    key: 'satisfaction',
+    icon: () => h(TeamOutlined),
+    label: '满意度评价'
+  })
 
   return baseItems
 })
@@ -201,9 +197,10 @@ const handleMenuClick = ({ key }) => {
     home: '/',
     'lab-management': '/lab-management',
     'lab-application': '/lab-application',
+    'application-record': '/application-record',
     'repair-handling': '/repair-handling',
-    'repair-report': '/repair-report',
-    satisfaction: '/satisfaction'
+    satisfaction: '/satisfaction',
+    message: '/message'
   }
 
   if (routeMap[key]) {
@@ -226,7 +223,7 @@ const handleUserMenuClick = ({ key }) => {
 }
 
 const showMessages = () => {
-  message.info('消息功能开发中...')
+  router.push('/message')
 }
 
 const handleLogout = () => {
@@ -267,9 +264,10 @@ const handleMobileMenuClick = ({ key }) => {
     home: '/',
     'lab-management': '/lab-management',
     'lab-application': '/lab-application',
+    'application-record': '/application-record',
     'repair-handling': '/repair-handling',
-    'repair-report': '/repair-report',
-    satisfaction: '/satisfaction'
+    satisfaction: '/satisfaction',
+    message: '/message'
   }
 
   if (routeMap[key]) {
@@ -289,8 +287,8 @@ onMounted(() => {
     '/lab-management': 'lab-management',
     '/lab-application': 'lab-application',
     '/repair-handling': 'repair-handling',
-    '/repair-report': 'repair-report',
-    '/satisfaction': 'satisfaction'
+    '/satisfaction': 'satisfaction',
+    '/message': 'message'
   }
 
   if (pathToKey[currentPath]) {

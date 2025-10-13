@@ -24,10 +24,11 @@ const route = useRoute()
   flex: 1;
   width: 100%;
   padding-top: 50px;
+  margin-top: 20px;
 }
 @media (max-width: 768px) {
   .main-content {
-    padding-top: 40px;
+    padding-top: 10px;
   }
 }
 </style>

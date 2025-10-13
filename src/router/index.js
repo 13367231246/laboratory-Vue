@@ -43,6 +43,11 @@ const router = createRouter({
           component: () => import('@/views/lab/LabManagement.vue')
         },
         {
+          path: 'application-record',
+          name: 'application-record',
+          component: () => import('@/views/apprecord/index.vue')
+        },
+        {
           path: 'lab-add',
           name: 'lab-add',
           component: () => import('@/views/lab/add-laboratory/index.vue')
@@ -66,6 +71,21 @@ const router = createRouter({
           path: 'satisfaction',
           name: 'satisfaction',
           component: () => import('@/views/satisfaction/Satisfaction.vue')
+        },
+        {
+          path: 'profile',
+          name: 'profile',
+          component: () => import('@/views/userInfo/index.vue')
+        },
+        {
+          path: 'settings',
+          name: 'settings',
+          component: () => import('@/views/setting/index.vue')
+        },
+        {
+          path: 'message',
+          name: 'message',
+          component: () => import('@/views/message/index.vue')
         }
       ]
     }

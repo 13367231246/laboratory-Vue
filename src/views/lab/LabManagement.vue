@@ -60,9 +60,6 @@
           <a-select-option value="李老师">李老师</a-select-option>
           <a-select-option value="王老师">王老师</a-select-option>
         </a-select>
-      </div>
-
-      <div class="action-buttons">
         <a-button type="primary" @click="handleSearch" :loading="loading" class="action-btn primary-btn">
           <SearchOutlined />
           搜索
@@ -74,10 +71,6 @@
         <a-button type="primary" @click="goToAddLab" class="action-btn primary-btn">
           <PlusOutlined />
           添加实验室
-        </a-button>
-        <a-button @click="handleExport" class="action-btn">
-          <ExportOutlined />
-          导出数据
         </a-button>
       </div>
     </a-card>
@@ -451,15 +444,6 @@ const deleteEquipment = async (id) => {
 const showAddEquipmentModal = () => {
   message.info('添加设备功能开发中...')
 }
-
-const handleImport = () => {
-  message.info('批量导入功能开发中...')
-}
-
-const handleExport = () => {
-  message.info('导出数据功能开发中...')
-}
-
 // 生命周期
 onMounted(() => {
   // 加载数据
@@ -502,12 +486,6 @@ onMounted(() => {
 .filter-select {
   width: 240px;
   min-width: 200px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
 }
 
 .action-btn {
@@ -613,11 +591,6 @@ onMounted(() => {
   .filter-select {
     width: 100%;
     min-width: auto;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-    gap: 8px;
   }
 
   .action-btn {

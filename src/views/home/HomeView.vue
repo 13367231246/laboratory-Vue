@@ -130,8 +130,6 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { ExperimentOutlined, ClockCircleOutlined, ToolOutlined, FileTextOutlined, PlusOutlined, SearchOutlined, SettingOutlined, TeamOutlined } from '@ant-design/icons-vue'
 import { useLabStore } from '@/stores/lab'
 import { useRepairStore } from '@/stores/repair'
@@ -169,12 +167,6 @@ const quickActions = computed(() => {
       title: '设备报修',
       description: '报告设备故障',
       icon: ToolOutlined
-    },
-    {
-      key: 'lab-search',
-      title: '查找实验室',
-      description: '搜索可用实验室',
-      icon: SearchOutlined
     },
     {
       key: 'satisfaction',
@@ -318,6 +310,6 @@ const loadData = async () => {
 }
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 @import './index.scss';
 </style>

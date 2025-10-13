@@ -26,6 +26,11 @@ export default defineConfig({
       directoryAsNamespace: true
     })
   ],
+  server: {
+    port: 5174,
+    open: true,
+    cors: true
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
