@@ -2,7 +2,6 @@
   <div class="review-details-page">
     <a-card class="filters-card">
       <div class="filters">
-        <a-input v-model:value="keyword" placeholder="按实验室/内容搜索" allow-clear class="filter-input" />
         <a-select v-model:value="labFilter" placeholder="选择实验室" allow-clear class="filter-select">
           <a-select-option v-for="lab in labOptions" :key="lab.id" :value="lab.id">{{ lab.name }}</a-select-option>
         </a-select>
@@ -50,7 +49,6 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 
 const loading = ref(false)
-const keyword = ref('')
 const labFilter = ref()
 
 const pagination = reactive({
@@ -75,10 +73,6 @@ const reviews = ref([
 
 const filteredReviews = computed(() => {
   let list = reviews.value
-  if (keyword.value) {
-    const kw = keyword.value.toLowerCase()
-    list = list.filter((r) => r.labName.toLowerCase().includes(kw) || r.comment.toLowerCase().includes(kw))
-  }
   if (labFilter.value) {
     list = list.filter((r) => r.labId === labFilter.value)
   }
@@ -93,7 +87,6 @@ const pagedReviews = computed(() => {
 
 function handleSearch() {}
 function handleReset() {
-  keyword.value = ''
   labFilter.value = undefined
 }
 
@@ -129,7 +122,6 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.filter-input,
 .filter-select {
   width: 220px;
   min-width: 180px;
@@ -191,7 +183,7 @@ onMounted(() => {
   .filters {
     flex-direction: column;
   }
-  .filter-input,
+
   .filter-select {
     width: 100%;
     min-width: auto;
