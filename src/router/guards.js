@@ -9,7 +9,7 @@ const routePermissions = {
   guestAccessible: ['/'],
 
   // 需要登录的路由 - 只有登录用户可以访问
-  authenticated: ['/lab-application', '/repair-handling', '/repair-report', '/satisfaction'],
+  authenticated: ['/lab-application', '/repair-handling', '/repair-report', '/satisfaction', '/satisfaction-detail'],
 
   // 仅教师可访问的路由
   teacherOnly: ['/lab-management']

@@ -195,6 +195,9 @@
               </a-list-item>
             </template>
           </a-list>
+          <div class="more-wrapper">
+            <a-button type="link" @click="goToReviewDetails">查看更多</a-button>
+          </div>
         </a-card>
       </a-col>
     </a-row>
@@ -346,6 +349,10 @@ const handleReset = () => {
   })
 }
 
+const goToReviewDetails = () => {
+  router.push('/satisfaction-detail')
+}
+
 // 生命周期
 onMounted(() => {
   // 加载数据
@@ -430,6 +437,11 @@ onMounted(() => {
   color: #999;
 }
 
+.more-wrapper {
+  margin-top: 8px;
+  text-align: right;
+}
+
 /* 移动端适配 - 768px以下 */
 @media (max-width: 768px) {
   .satisfaction-form-card {
@@ -458,6 +470,10 @@ onMounted(() => {
 
   .form-actions .ant-btn {
     width: 100%;
+  }
+
+  .more-wrapper {
+    text-align: center;
   }
 }
 </style>
