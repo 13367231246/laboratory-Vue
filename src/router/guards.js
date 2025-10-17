@@ -3,13 +3,13 @@ import { useUserStore } from '@/stores/user'
 // 路由权限配置
 const routePermissions = {
   // 公开路由 - 所有用户都可以访问
-  public: ['/login', '/register', '/forgot-password', '/change-password'],
+  public: ['/login', '/register', '/forgot-password', '/change-password', '/satisfaction-detail'],
 
   // 访客可访问的路由 - 没登录的用户可以访问
   guestAccessible: ['/'],
 
   // 需要登录的路由 - 只有登录用户可以访问
-  authenticated: ['/lab-application', '/repair-handling', '/repair-report', '/satisfaction', '/satisfaction-detail'],
+  authenticated: ['/lab-application', '/repair-handling', '/repair-report', '/satisfaction'],
 
   // 仅教师可访问的路由
   teacherOnly: ['/lab-management']

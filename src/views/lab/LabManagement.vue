@@ -87,7 +87,7 @@
 
           <template v-else-if="column.key === 'equipment'">
             <a-badge :count="record.equipmentCount" :number-style="{ backgroundColor: '#52c41a' }">
-              <a-button type="link" @click="showEquipmentModal(record)"> 查看设备 </a-button>
+              <a-button type="link" @click="goToEquipmentDetails(record)"> 查看设备 </a-button>
             </a-badge>
           </template>
 
@@ -99,11 +99,11 @@
               </a-button>
               <template #overlay>
                 <a-menu>
-                  <a-menu-item key="edit" @click="editLab(record)">
+                  <a-menu-item key="edit" @click="openEditLab(record)">
                     <EditOutlined />
                     编辑
                   </a-menu-item>
-                  <a-menu-item key="detail" @click="viewLabDetail(record)">
+                  <a-menu-item key="detail" @click="openLabDetail(record)">
                     <EyeOutlined />
                     详情
                   </a-menu-item>
@@ -120,32 +120,48 @@
       </a-table>
     </a-card>
 
-    <!-- 设备列表模态框 -->
-    <a-modal v-model:open="equipmentModalVisible" title="设备列表" width="1000px" :footer="null">
-      <div class="equipment-modal-header">
-        <h3>{{ selectedLab?.name }} - 设备管理</h3>
-        <a-button type="primary" @click="showAddEquipmentModal">
-          <PlusOutlined />
-          添加设备
-        </a-button>
-      </div>
+    <!-- 实验室详情弹窗 -->
+    <a-modal v-model:open="detailVisible" title="实验室详情" width="800px" :footer="null">
+      <LabDetail v-if="currentLab" :lab="currentLab" @edit-lab="openEditLab(currentLab)" @add-equipment="openAddEquipment" @edit-equipment="openEditEquipment" @delete-equipment="deleteEquipment" />
+    </a-modal>
 
-      <a-table :columns="equipmentColumns" :data-source="selectedLab?.equipment || []" :pagination="false" row-key="id" size="small">
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <a-tag :color="getEquipmentStatusColor(record.status)">
-              {{ getEquipmentStatusText(record.status) }}
-            </a-tag>
-          </template>
+    <!-- 编辑实验室弹窗 -->
+    <a-modal v-model:open="editLabVisible" title="编辑实验室" width="640px" @ok="saveLab" :confirm-loading="savingLab" ok-text="保存" cancel-text="取消">
+      <a-form :model="labForm" :label-col="{ span: 5 }" :wrapper-col="{ span: 17 }" :rules="labRules" ref="labFormRef">
+        <a-form-item label="实验室名称" name="name">
+          <a-input v-model:value="labForm.name" placeholder="请输入实验室名称" />
+        </a-form-item>
+        <a-form-item label="位置" name="location">
+          <a-input v-model:value="labForm.location" placeholder="请输入位置" />
+        </a-form-item>
+        <a-form-item label="容量" name="capacity">
+          <a-input-number v-model:value="labForm.capacity" :min="1" :max="200" style="width: 100%" />
+        </a-form-item>
+        <a-form-item label="负责人" name="manager">
+          <a-input v-model:value="labForm.manager" placeholder="请输入负责人" />
+        </a-form-item>
+        <a-form-item label="联系电话" name="phone">
+          <a-input v-model:value="labForm.phone" placeholder="请输入联系电话" />
+        </a-form-item>
+        <a-form-item label="描述" name="description">
+          <a-textarea v-model:value="labForm.description" :rows="3" placeholder="请输入描述" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
-          <template v-else-if="column.key === 'actions'">
-            <a-space>
-              <a-button type="link" size="small" @click="editEquipment(record)"> 编辑 </a-button>
-              <a-button type="link" size="small" @click="deleteEquipment(record.id)" danger> 删除 </a-button>
-            </a-space>
-          </template>
-        </template>
-      </a-table>
+    <!-- 新增/编辑设备弹窗 -->
+    <a-modal v-model:open="equipmentFormVisible" :title="equipmentEditing ? '编辑设备' : '新增设备'" width="520px" @ok="saveEquipment" :confirm-loading="savingEquipment" ok-text="保存" cancel-text="取消">
+      <a-form :model="equipmentForm" :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }" ref="equipmentFormRef" :rules="equipmentRules">
+        <a-form-item label="设备名称" name="name">
+          <a-input v-model:value="equipmentForm.name" placeholder="请输入设备名称" />
+        </a-form-item>
+        <a-form-item label="型号" name="model">
+          <a-input v-model:value="equipmentForm.model" placeholder="请输入型号" />
+        </a-form-item>
+        <a-form-item label="序列号" name="serialNumber">
+          <a-input v-model:value="equipmentForm.serialNumber" placeholder="请输入序列号" />
+        </a-form-item>
+      </a-form>
     </a-modal>
   </div>
 </template>
@@ -155,8 +171,11 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { PlusOutlined, ImportOutlined, ExportOutlined, SearchOutlined, ReloadOutlined, ExperimentOutlined, ClockCircleOutlined, ExclamationCircleOutlined, ToolOutlined, DownOutlined, EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { useUserStore } from '@/stores/user'
+import LabDetail from './laboratory-details/index.vue'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 响应式数据
 const loading = ref(false)
@@ -165,6 +184,37 @@ const statusFilter = ref(undefined)
 const managerFilter = ref(undefined)
 const equipmentModalVisible = ref(false)
 const selectedLab = ref(null)
+const detailVisible = ref(false)
+const editLabVisible = ref(false)
+const equipmentFormVisible = ref(false)
+const currentLab = ref(null)
+const equipmentEditing = ref(false)
+const savingLab = ref(false)
+const savingEquipment = ref(false)
+
+// 表单模型
+const labFormRef = ref()
+const equipmentFormRef = ref()
+const labForm = reactive({ id: null, name: '', location: '', capacity: undefined, manager: '', phone: '', description: '' })
+const equipmentForm = reactive({ id: null, name: '', model: '', serialNumber: '' })
+
+// 校验规则
+const labRules = {
+  name: [{ required: true, message: '请输入实验室名称', trigger: 'blur' }],
+  location: [{ required: true, message: '请输入位置', trigger: 'blur' }],
+  capacity: [{ required: true, type: 'number', message: '请输入容量', trigger: 'change' }],
+  manager: [{ required: true, message: '请输入负责人', trigger: 'blur' }],
+  phone: [
+    { required: true, message: '请输入联系电话', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ]
+}
+
+const equipmentRules = {
+  name: [{ required: true, message: '请输入设备名称', trigger: 'blur' }],
+  model: [{ required: true, message: '请输入型号', trigger: 'blur' }],
+  serialNumber: [{ required: true, message: '请输入序列号', trigger: 'blur' }]
+}
 
 // 统计数据
 const stats = ref({
@@ -190,16 +240,15 @@ const labs = ref([
     id: 1,
     name: '计算机实验室A',
     location: '教学楼A座201',
-    capacity: 40,
-    status: 0,
-    manager: '张老师',
-    phone: '13800138001',
-    description: '主要用于计算机课程教学',
-    equipmentCount: 45,
+    capacity: 40, // 容量
+    manager: '张老师', // 负责人
+    phone: '13800138001', // 联系电话
+    description: '主要用于计算机课程教学', // 描述
+    equipmentCount: 45, // 设备数
     equipment: [
-      { id: 1, name: '台式电脑', model: 'Dell OptiPlex', status: 0, serialNumber: 'PC001' },
-      { id: 2, name: '投影仪', model: 'Epson CB-X41', status: 0, serialNumber: 'PJ001' },
-      { id: 3, name: '网络设备', model: 'Cisco Switch', status: 0, serialNumber: 'NW001' }
+      { id: 1, name: '台式电脑', model: 'Dell OptiPlex', serialNumber: 'PC001' },
+      { id: 2, name: '投影仪', model: 'Epson CB-X41', serialNumber: 'PJ001' },
+      { id: 3, name: '网络设备', model: 'Cisco Switch', serialNumber: 'NW001' }
     ]
   },
   {
@@ -317,6 +366,11 @@ const equipmentColumns = [
 const filteredLabs = computed(() => {
   let result = labs.value
 
+  // 仅显示当前老师负责的实验室
+  if (userStore?.userInfo?.name) {
+    result = result.filter((lab) => lab.manager === userStore.userInfo.name)
+  }
+
   // 搜索过滤
   if (searchText.value) {
     result = result.filter((lab) => lab.name.toLowerCase().includes(searchText.value.toLowerCase()) || lab.location.toLowerCase().includes(searchText.value.toLowerCase()))
@@ -402,12 +456,87 @@ const goToAddLab = () => {
   router.push('/lab-add')
 }
 
-const editLab = (record) => {
-  message.info('编辑功能开发中...')
+const openLabDetail = (record) => {
+  currentLab.value = JSON.parse(JSON.stringify(record))
+  detailVisible.value = true
 }
 
-const viewLabDetail = (record) => {
-  router.push(`/lab-detail/${record.id}`)
+const openEditLab = (record) => {
+  currentLab.value = record
+  Object.assign(labForm, { id: record.id, name: record.name, location: record.location, capacity: record.capacity, manager: record.manager, phone: record.phone, description: record.description })
+  editLabVisible.value = true
+}
+
+const saveLab = async () => {
+  try {
+    await labFormRef.value.validate()
+    savingLab.value = true
+    // 模拟更新
+    const idx = labs.value.findIndex((l) => l.id === labForm.id)
+    if (idx !== -1) {
+      labs.value[idx] = { ...labs.value[idx], ...labForm }
+      message.success('保存成功')
+      editLabVisible.value = false
+      // 同步详情
+      if (currentLab.value && currentLab.value.id === labForm.id) {
+        currentLab.value = JSON.parse(JSON.stringify(labs.value[idx]))
+      }
+    }
+  } catch (e) {
+    // 验证失败或异常
+  } finally {
+    savingLab.value = false
+  }
+}
+
+const openAddEquipment = () => {
+  equipmentEditing.value = false
+  Object.assign(equipmentForm, { id: null, name: '', model: '', serialNumber: '' })
+  equipmentFormVisible.value = true
+}
+
+const openEditEquipment = (item) => {
+  equipmentEditing.value = true
+  Object.assign(equipmentForm, item)
+  equipmentFormVisible.value = true
+}
+
+const saveEquipment = async () => {
+  try {
+    await equipmentFormRef.value.validate()
+    savingEquipment.value = true
+    if (!currentLab.value) return
+    const labIdx = labs.value.findIndex((l) => l.id === currentLab.value.id)
+    if (labIdx === -1) return
+    if (equipmentEditing.value) {
+      const list = labs.value[labIdx].equipment || []
+      const eqIdx = list.findIndex((e) => e.id === equipmentForm.id)
+      if (eqIdx !== -1) {
+        list[eqIdx] = { ...list[eqIdx], ...equipmentForm }
+      }
+    } else {
+      const newId = Date.now()
+      labs.value[labIdx].equipment = labs.value[labIdx].equipment || []
+      labs.value[labIdx].equipment.push({ id: newId, ...equipmentForm })
+      labs.value[labIdx].equipmentCount = labs.value[labIdx].equipment.length
+    }
+    // 同步当前详情
+    currentLab.value = JSON.parse(JSON.stringify(labs.value[labIdx]))
+    equipmentFormVisible.value = false
+    message.success('保存成功')
+  } finally {
+    savingEquipment.value = false
+  }
+}
+
+const deleteEquipment = async (id) => {
+  if (!currentLab.value) return
+  const labIdx = labs.value.findIndex((l) => l.id === currentLab.value.id)
+  if (labIdx === -1) return
+  labs.value[labIdx].equipment = (labs.value[labIdx].equipment || []).filter((e) => e.id !== id)
+  labs.value[labIdx].equipmentCount = labs.value[labIdx].equipment.length
+  currentLab.value = JSON.parse(JSON.stringify(labs.value[labIdx]))
+  message.success('删除成功')
 }
 
 const deleteLab = async (id) => {
@@ -421,29 +550,11 @@ const deleteLab = async (id) => {
   }
 }
 
-const showEquipmentModal = (record) => {
-  selectedLab.value = record
-  equipmentModalVisible.value = true
+const goToEquipmentDetails = (record) => {
+  router.push(`/equipment-details/${record.id}`)
 }
 
-const editEquipment = (record) => {
-  message.info('编辑设备功能开发中...')
-}
-
-const deleteEquipment = async (id) => {
-  try {
-    // 模拟API调用
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    selectedLab.value.equipment = selectedLab.value.equipment.filter((eq) => eq.id !== id)
-    message.success('删除成功')
-  } catch (error) {
-    message.error('删除失败')
-  }
-}
-
-const showAddEquipmentModal = () => {
-  message.info('添加设备功能开发中...')
-}
+// 设备相关交互改为详情页处理
 // 生命周期
 onMounted(() => {
   // 加载数据
@@ -452,150 +563,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.lab-management-page {
-  margin-top: 10px;
-}
-.stats-section {
-  margin-bottom: 16px;
-}
-
-.stat-card {
-  text-align: center;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.search-card {
-  margin-bottom: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.search-filters {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.search-input {
-  width: 240px;
-  min-width: 200px;
-}
-
-.filter-select {
-  width: 240px;
-  min-width: 200px;
-}
-
-.action-btn {
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.primary-btn {
-  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
-  border: none;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
-}
-
-.primary-btn:hover {
-  background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
-  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.4);
-}
-
-.lab-list-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.equipment-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.equipment-modal-header h3 {
-  margin: 0;
-  color: #333;
-}
-
-/* 移动端适配 - 768px以下 */
-@media (max-width: 768px) {
-  .stats-section {
-    margin-bottom: 16px;
-  }
-
-  .stat-card {
-    margin-bottom: 8px;
-  }
-
-  .lab-list-card {
-    margin-bottom: 16px;
-  }
-
-  /* 表格移动端优化 */
-  .lab-list-card :deep(.ant-table) {
-    font-size: 12px;
-  }
-
-  .lab-list-card :deep(.ant-table-thead > tr > th) {
-    padding: 8px 4px;
-    font-size: 12px;
-  }
-
-  .lab-list-card :deep(.ant-table-tbody > tr > td) {
-    padding: 8px 4px;
-    font-size: 12px;
-  }
-
-  .lab-list-card :deep(.ant-table-tbody > tr > td .ant-btn) {
-    padding: 2px 4px;
-    font-size: 12px;
-  }
-
-  .lab-list-card :deep(.ant-table-tbody > tr > td .ant-tag) {
-    font-size: 11px;
-    padding: 2px 6px;
-  }
-
-  /* 分页器移动端优化 */
-  .lab-list-card :deep(.ant-pagination) {
-    text-align: center;
-    margin-top: 16px;
-  }
-
-  .lab-list-card :deep(.ant-pagination-item) {
-    min-width: 28px;
-    height: 28px;
-    line-height: 26px;
-  }
-
-  .lab-list-card :deep(.ant-pagination-prev),
-  .lab-list-card :deep(.ant-pagination-next) {
-    min-width: 28px;
-    height: 28px;
-    line-height: 26px;
-  }
-
-  .search-input,
-  .filter-select {
-    width: 100%;
-    min-width: auto;
-  }
-
-  .action-btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
+@import './index.scss';
 </style>

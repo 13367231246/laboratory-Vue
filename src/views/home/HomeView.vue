@@ -173,6 +173,12 @@ const quickActions = computed(() => {
       title: '满意度评价',
       description: '提交使用反馈',
       icon: TeamOutlined
+    },
+    {
+      key: 'satisfaction-detail',
+      title: '评价详情',
+      description: '查看评价详情',
+      icon: FileTextOutlined
     }
   ]
 
@@ -250,7 +256,8 @@ const handleQuickAction = (key) => {
     'apply-lab': '/lab-application',
     'repair-report': '/repair-report',
     'lab-search': '/lab-search',
-    satisfaction: '/satisfaction'
+    satisfaction: '/satisfaction',
+    'satisfaction-detail': '/satisfaction-detail'
   }
 
   if (routeMap[key]) {

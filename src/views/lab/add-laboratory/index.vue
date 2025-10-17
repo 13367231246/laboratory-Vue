@@ -33,15 +33,6 @@
             <a-input v-model:value="formData.phone" placeholder="请输入联系电话" />
           </a-form-item>
         </a-col>
-        <a-col :xs="24" :lg="12">
-          <a-form-item label="状态" name="status">
-            <a-select v-model:value="formData.status" placeholder="请选择状态">
-              <a-select-option :value="0">正常且空闲</a-select-option>
-              <a-select-option :value="1">使用中</a-select-option>
-              <a-select-option :value="2">需要处理</a-select-option>
-            </a-select>
-          </a-form-item>
-        </a-col>
       </a-row>
 
       <a-form-item label="描述" name="description">
@@ -75,16 +66,9 @@
                   <a-input v-model:value="equipment.serialNumber" placeholder="序列号" />
                 </a-col>
                 <a-col :xs="24" :sm="4">
-                  <a-space>
-                    <a-select v-model:value="equipment.status">
-                      <a-select-option :value="0">正常</a-select-option>
-                      <a-select-option :value="1">使用中</a-select-option>
-                      <a-select-option :value="2">异常</a-select-option>
-                    </a-select>
-                    <a-button type="text" danger @click="removeEquipment(index)">
-                      <DeleteOutlined />
-                    </a-button>
-                  </a-space>
+                  <a-button type="text" danger @click="removeEquipment(index)">
+                    <DeleteOutlined />
+                  </a-button>
                 </a-col>
               </a-row>
             </div>
@@ -126,7 +110,6 @@ const formData = reactive({
   capacity: undefined,
   manager: '',
   phone: '',
-  status: 0,
   description: '',
   equipment: []
 })
@@ -174,8 +157,7 @@ const addEquipment = () => {
   formData.equipment.push({
     name: '',
     model: '',
-    serialNumber: '',
-    status: 0
+    serialNumber: ''
   })
 }
 

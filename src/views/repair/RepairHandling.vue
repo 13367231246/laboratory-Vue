@@ -75,7 +75,7 @@
 
     <!-- 维修列表 -->
     <a-card class="repair-list-card">
-      <a-table :columns="columns" :data-source="filteredRepairs" :scroll="{ x: 800 }" :loading="loading" :pagination="pagination" row-key="id" @change="handleTableChange">
+      <a-table :columns="columns" :data-source="filteredRepairs" :scroll="{ x: 800 }" :loading="loading" :pagination="pagination" row-key="id" @change="handleTableChange" size="small">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
             <a-tag :color="getStatusColor(record.status)">
@@ -89,15 +89,10 @@
             </a-tag>
           </template>
 
-          <template v-else-if="column.key === 'images'">
-            <a-button type="link" size="small" @click="showImages(record)"> 查看照片 ({{ record.images?.length || 0 }}) </a-button>
-          </template>
-
           <template v-else-if="column.key === 'actions'">
             <a-space>
-              <a-button type="link" size="small" @click="completeRepair(record)" v-if="record.status === 1"> 完成维修 </a-button>
-              <a-button type="link" size="small" @click="viewDetail(record)"> 详情 </a-button>
-              <a-button type="link" size="small" @click="editRepair(record)"> 编辑 </a-button>
+              <a-button type="link" size="small" @click="completeRepair(record)" v-if="record.status === 1">完成维修</a-button>
+              <a-button type="link" size="small" @click="viewDetail(record)">详情</a-button>
             </a-space>
           </template>
         </template>
@@ -106,62 +101,7 @@
 
     <!-- 维修详情模态框 -->
     <a-modal v-model:open="detailModalVisible" title="维修详情" width="800px" :footer="null">
-      <div class="repair-detail" v-if="selectedRepair">
-        <a-descriptions :column="2" bordered>
-          <a-descriptions-item label="报修类型">
-            {{ getRepairTypeText(selectedRepair.repairType) }}
-          </a-descriptions-item>
-          <a-descriptions-item label="实验室">
-            {{ selectedRepair.labName }}
-          </a-descriptions-item>
-          <a-descriptions-item label="设备名称">
-            {{ selectedRepair.equipmentName }}
-          </a-descriptions-item>
-          <a-descriptions-item label="紧急程度">
-            <a-tag :color="getUrgencyColor(selectedRepair.urgency)">
-              {{ getUrgencyText(selectedRepair.urgency) }}
-            </a-tag>
-          </a-descriptions-item>
-          <a-descriptions-item label="报修人">
-            {{ selectedRepair.reporter }}
-          </a-descriptions-item>
-          <a-descriptions-item label="联系方式">
-            {{ selectedRepair.contactInfo }}
-          </a-descriptions-item>
-          <a-descriptions-item label="报修时间">
-            {{ selectedRepair.reportTime }}
-          </a-descriptions-item>
-          <a-descriptions-item label="当前状态">
-            <a-tag :color="getStatusColor(selectedRepair.status)">
-              {{ getStatusText(selectedRepair.status) }}
-            </a-tag>
-          </a-descriptions-item>
-          <a-descriptions-item label="故障描述" :span="2">
-            {{ selectedRepair.description }}
-          </a-descriptions-item>
-          <a-descriptions-item label="维修记录" :span="2" v-if="selectedRepair.repairRecords">
-            <a-timeline>
-              <a-timeline-item v-for="record in selectedRepair.repairRecords" :key="record.id" :color="record.status === 'completed' ? 'green' : 'blue'">
-                <div class="timeline-content">
-                  <div class="timeline-title">{{ record.title }}</div>
-                  <div class="timeline-desc">{{ record.description }}</div>
-                  <div class="timeline-meta">
-                    <span>{{ record.operator }}</span>
-                    <span>{{ record.time }}</span>
-                  </div>
-                </div>
-              </a-timeline-item>
-            </a-timeline>
-          </a-descriptions-item>
-        </a-descriptions>
-
-        <div v-if="selectedRepair.images && selectedRepair.images.length > 0" class="repair-images">
-          <h4>故障照片</h4>
-          <a-image-preview-group>
-            <a-image v-for="(image, index) in selectedRepair.images" :key="index" :src="image.url" :width="120" :height="120" style="margin-right: 8px; margin-bottom: 8px" />
-          </a-image-preview-group>
-        </div>
-      </div>
+      <RepairDetail :repair="selectedRepair" />
     </a-modal>
 
     <!-- 完成维修模态框 -->
@@ -201,6 +141,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { PlusOutlined, ExportOutlined, SearchOutlined, ReloadOutlined, ClockCircleOutlined, ToolOutlined, CheckCircleOutlined, CalendarOutlined } from '@ant-design/icons-vue'
+import RepairDetail from './repair-details/index.vue'
 
 const router = useRouter()
 
@@ -344,13 +285,9 @@ const columns = [
     sorter: true
   },
   {
-    title: '故障照片',
-    key: 'images'
-  },
-  {
     title: '操作',
     key: 'actions',
-    width: 200
+    width: 120
   }
 ]
 
@@ -463,20 +400,10 @@ const handleTableChange = (pag, filters, sorter) => {
   pagination.pageSize = pag.pageSize
 }
 
-const showImages = (record) => {
-  selectedRepair.value = record
-  detailModalVisible.value = true
-}
-
 const viewDetail = (record) => {
   selectedRepair.value = record
   detailModalVisible.value = true
 }
-
-const editRepair = (record) => {
-  message.info('编辑维修记录功能开发中...')
-}
-
 const completeRepair = (record) => {
   selectedRepair.value = record
   completeRepairModalVisible.value = true
@@ -644,6 +571,28 @@ onMounted(() => {
   .search-input {
     width: 100%;
     min-width: auto;
+  }
+  /* 表格紧凑样式，保持与实验室列表一致 */
+  .repair-list-card :deep(.ant-table) {
+    font-size: 12px;
+  }
+
+  .repair-list-card :deep(.ant-table-thead > tr > th) {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+
+  .repair-list-card :deep(.ant-table-tbody > tr > td) {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+  .repair-list-card :deep(.ant-table-tbody > tr > td .ant-btn) {
+    padding: 2px 4px;
+    font-size: 12px;
+  }
+  .repair-list-card :deep(.ant-table-tbody > tr > td .ant-btn) {
+    font-size: 11px;
+    padding: 2px 6px;
   }
 }
 </style>

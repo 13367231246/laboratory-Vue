@@ -10,6 +10,7 @@
           <div class="user-basic-info">
             <h2>{{ userInfo.name }}</h2>
             <p class="user-role">{{ getRoleText(userInfo.role) }}</p>
+            <p class="user-id">学号/学工号：{{ userInfo.idNumber || '未设置' }}</p>
             <p class="user-email">{{ userInfo.email || '未设置邮箱' }}</p>
           </div>
         </div>

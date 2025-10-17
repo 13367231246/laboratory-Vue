@@ -9,7 +9,11 @@
 
         <a-form ref="formRef" :model="formData" :rules="formRules" class="login-form" @finish="handleLogin">
           <a-form-item name="username">
-            <a-input v-model:value="formData.username" size="large" placeholder="手机号/学号" :prefix="h(UserOutlined)" />
+            <a-input v-model:value="formData.username" size="large" placeholder="手机号" :prefix="h(UserOutlined)" />
+          </a-form-item>
+
+          <a-form-item name="idNumber">
+            <a-input v-model:value="formData.idNumber" size="large" placeholder="学号/学工号" :prefix="h(UserOutlined)" />
           </a-form-item>
 
           <a-form-item name="password">
@@ -76,7 +80,7 @@
 import { ref, reactive, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { UserOutlined, LockOutlined, WechatOutlined, QqOutlined, AlipayOutlined, ExperimentOutlined, ToolOutlined, FileTextOutlined, TeamOutlined } from '@ant-design/icons-vue'
+import { UserOutlined, LockOutlined, ExperimentOutlined, ToolOutlined, FileTextOutlined, TeamOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
@@ -91,7 +95,8 @@ const formData = reactive({
   username: '',
   password: '',
   userType: 'teacher',
-  rememberMe: false
+  rememberMe: false,
+  idNumber: ''
 })
 
 // 表单验证规则
@@ -114,7 +119,8 @@ const handleLogin = async () => {
     const result = await userStore.login({
       username: formData.username,
       password: formData.password,
-      userType: formData.userType
+      userType: formData.userType,
+      idNumber: formData.idNumber
     })
 
     if (result.success) {
