@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Layout from '../views/index.vue'
-import HomeView from '../views/home/HomeView.vue'
+import HomeView from '../views/home/index.vue'
 import { setupRouterGuards } from './guards'
 
 const router = createRouter({
@@ -40,7 +40,7 @@ const router = createRouter({
         {
           path: 'lab-management',
           name: 'lab-management',
-          component: () => import('@/views/lab/LabManagement.vue')
+          component: () => import('@/views/lab/index.vue')
         },
         {
           path: 'equipment-details/:id',
@@ -60,17 +60,17 @@ const router = createRouter({
         {
           path: 'lab-application',
           name: 'lab-application',
-          component: () => import('@/views/application/LabApplication.vue')
+          component: () => import('@/views/application/index.vue')
         },
         {
           path: 'repair-handling',
           name: 'repair-handling',
-          component: () => import('@/views/repair/RepairHandling.vue')
+          component: () => import('@/views/repair/index.vue')
         },
         {
           path: 'repair-report',
           name: 'repair-report',
-          component: () => import('@/views/repair/RepairReport.vue')
+          component: () => import('@/views/repair/RepairReport/index.vue')
         },
         {
           path: 'satisfaction',
