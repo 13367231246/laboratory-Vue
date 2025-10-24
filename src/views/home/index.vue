@@ -94,6 +94,7 @@
                   </template>
                   <template #description>
                     <div class="activity-meta">
+                      <span class="applicant">申请人：{{ item.applicant }}</span>
                       <a-tag :color="getStatusColor(item.status)">{{ getStatusText(item.status) }}</a-tag>
                       <span class="activity-time">{{ item.createTime }}</span>
                     </div>
@@ -130,7 +131,7 @@
 </template>
 
 <script setup>
-import { ExperimentOutlined, ClockCircleOutlined, ToolOutlined, FileTextOutlined, PlusOutlined, SearchOutlined, SettingOutlined, TeamOutlined } from '@ant-design/icons-vue'
+import { ExperimentOutlined, ClockCircleOutlined, ToolOutlined, FileTextOutlined, SettingOutlined, TeamOutlined } from '@ant-design/icons-vue'
 import { useLabStore } from '@/stores/lab'
 import { useRepairStore } from '@/stores/repair'
 import { useApplicationStore } from '@/stores/application'
@@ -206,6 +207,7 @@ const recentApplications = computed(() => {
   return applicationStore.applications.slice(0, 5).map((app) => ({
     id: app.id,
     labName: app.labName,
+    applicant: app.applicant,
     status: app.status,
     createTime: app.applyTime
   }))

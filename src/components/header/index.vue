@@ -120,11 +120,18 @@ const menuItems = computed(() => {
       }
     )
   } else if (userInfo.value.role === 'student') {
-    baseItems.push({
-      key: 'lab-application',
-      icon: () => h(FileTextOutlined),
-      label: '申请实验室'
-    })
+    baseItems.push(
+      {
+        key: 'lab-application',
+        icon: () => h(FileTextOutlined),
+        label: '申请实验室'
+      },
+      {
+        key: 'application-record',
+        icon: () => h(FileTextOutlined),
+        label: '申请记录'
+      }
+    )
   }
 
   // 所有用户都有的菜单
@@ -172,11 +179,18 @@ const mobileMenuItems = computed(() => {
       }
     )
   } else if (userInfo.value.role === 'student') {
-    baseItems.push({
-      key: 'lab-application',
-      icon: () => h(FileTextOutlined),
-      label: '申请实验室'
-    })
+    baseItems.push(
+      {
+        key: 'lab-application',
+        icon: () => h(FileTextOutlined),
+        label: '申请实验室'
+      },
+      {
+        key: 'application-record',
+        icon: () => h(FileTextOutlined),
+        label: '申请记录'
+      }
+    )
   }
 
   // 所有用户都有的菜单

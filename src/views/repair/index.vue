@@ -91,8 +91,8 @@
 
           <template v-else-if="column.key === 'actions'">
             <a-space>
-              <a-button type="link" size="small" @click="completeRepair(record)" v-if="record.status === 1">完成维修</a-button>
               <a-button type="link" size="small" @click="viewDetail(record)">详情</a-button>
+              <a-button type="link" size="small" @click="completeRepair(record)" v-if="record.status === 1">完成</a-button>
             </a-space>
           </template>
         </template>
