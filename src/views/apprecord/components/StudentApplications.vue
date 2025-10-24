@@ -48,11 +48,28 @@
           </template>
 
           <template v-else-if="column.key === 'actions'">
-            <a-space>
-              <a-button type="link" size="small" @click="viewDetail(record)">详情</a-button>
-              <a-button v-if="record.status === 'using'" type="link" size="small" @click="handleComplete(record)" style="color: #52c41a">完成</a-button>
-              <a-button type="link" size="small" @click="handleRepair(record)" style="color: #fa8c16">报修</a-button>
-            </a-space>
+            <a-dropdown>
+              <a-button type="link" size="small">
+                操作
+                <DownOutlined />
+              </a-button>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item key="detail" @click="viewDetail(record)">
+                    <EyeOutlined />
+                    详情
+                  </a-menu-item>
+                  <a-menu-item v-if="record.status === 'using'" key="complete" @click="handleComplete(record)">
+                    <CheckOutlined />
+                    完成
+                  </a-menu-item>
+                  <a-menu-item key="repair" @click="handleRepair(record)">
+                    <ToolOutlined />
+                    报修
+                  </a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
           </template>
         </template>
       </a-table>
@@ -63,7 +80,7 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { message } from 'ant-design-vue'
-import { SearchOutlined, ReloadOutlined, ExportOutlined } from '@ant-design/icons-vue'
+import { SearchOutlined, ReloadOutlined, ExportOutlined, DownOutlined, EyeOutlined, CheckOutlined, ToolOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 
@@ -154,7 +171,7 @@ const studentColumns = [
   {
     title: '操作',
     key: 'actions',
-    width: 120,
+    width: 50,
     fixed: 'right'
   }
 ]

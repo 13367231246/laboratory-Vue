@@ -170,7 +170,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { PlusOutlined, ImportOutlined, ExportOutlined, SearchOutlined, ReloadOutlined, ExperimentOutlined, ClockCircleOutlined, ExclamationCircleOutlined, ToolOutlined, DownOutlined, EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, SearchOutlined, ReloadOutlined, ExperimentOutlined, ClockCircleOutlined, ExclamationCircleOutlined, ToolOutlined, DownOutlined, EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import LabDetail from './laboratory-details/index.vue'
 
@@ -182,8 +182,6 @@ const loading = ref(false)
 const searchText = ref('')
 const statusFilter = ref(undefined)
 const managerFilter = ref(undefined)
-const equipmentModalVisible = ref(false)
-const selectedLab = ref(null)
 const detailVisible = ref(false)
 const editLabVisible = ref(false)
 const equipmentFormVisible = ref(false)
@@ -401,11 +399,11 @@ const getStatusColor = (status) => {
 
 const getStatusText = (status) => {
   const textMap = {
-    0: '正常且空闲',
+    0: '正常',
     1: '使用中',
-    2: '需要处理'
+    2: '维护'
   }
-  return textMap[status] || '未知'
+  return textMap[status] || '正常'
 }
 
 const getEquipmentStatusColor = (status) => {
@@ -415,15 +413,6 @@ const getEquipmentStatusColor = (status) => {
     2: 'red' // 异常
   }
   return colorMap[status] || 'default'
-}
-
-const getEquipmentStatusText = (status) => {
-  const textMap = {
-    0: '正常且空闲',
-    1: '使用中',
-    2: '异常'
-  }
-  return textMap[status] || '未知'
 }
 
 const handleSearch = () => {

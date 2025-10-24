@@ -74,7 +74,7 @@
     </a-card>
 
     <!-- 维修列表 -->
-    <a-card class="repair-list-card">
+    <div class="repair-list-card">
       <a-table :columns="columns" :data-source="filteredRepairs" :scroll="{ x: 800 }" :loading="loading" :pagination="pagination" row-key="id" @change="handleTableChange" size="small">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
@@ -90,14 +90,28 @@
           </template>
 
           <template v-else-if="column.key === 'actions'">
-            <a-space>
-              <a-button type="link" size="small" @click="viewDetail(record)">详情</a-button>
-              <a-button type="link" size="small" @click="completeRepair(record)" v-if="record.status === 1">完成</a-button>
-            </a-space>
+            <a-dropdown>
+              <a-button type="link" size="small">
+                操作
+                <DownOutlined />
+              </a-button>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item key="detail" @click="viewDetail(record)">
+                    <EyeOutlined />
+                    详情
+                  </a-menu-item>
+                  <a-menu-item key="complete" @click="completeRepair(record)" v-if="record.status === 1">
+                    <CheckOutlined />
+                    完成
+                  </a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
           </template>
         </template>
       </a-table>
-    </a-card>
+    </div>
 
     <!-- 维修详情模态框 -->
     <a-modal v-model:open="detailModalVisible" title="维修详情" width="800px" :footer="null">
@@ -140,7 +154,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { PlusOutlined, ExportOutlined, SearchOutlined, ReloadOutlined, ClockCircleOutlined, ToolOutlined, CheckCircleOutlined, CalendarOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, SearchOutlined, ReloadOutlined, ClockCircleOutlined, ToolOutlined, CheckCircleOutlined, CalendarOutlined, DownOutlined, EyeOutlined, CheckOutlined } from '@ant-design/icons-vue'
 import RepairDetail from './repair-details/index.vue'
 
 const router = useRouter()
@@ -287,7 +301,8 @@ const columns = [
   {
     title: '操作',
     key: 'actions',
-    width: 120
+    width: 80,
+    fixed: 'right'
   }
 ]
 
@@ -572,10 +587,6 @@ onMounted(() => {
     width: 100%;
     min-width: auto;
   }
-  /* 表格紧凑样式，保持与实验室列表一致 */
-  .repair-list-card :deep(.ant-table) {
-    font-size: 12px;
-  }
 
   .repair-list-card :deep(.ant-table-thead > tr > th) {
     padding: 8px 4px;
@@ -583,16 +594,10 @@ onMounted(() => {
   }
 
   .repair-list-card :deep(.ant-table-tbody > tr > td) {
-    padding: 8px 4px;
     font-size: 12px;
   }
   .repair-list-card :deep(.ant-table-tbody > tr > td .ant-btn) {
     padding: 2px 4px;
-    font-size: 12px;
-  }
-  .repair-list-card :deep(.ant-table-tbody > tr > td .ant-btn) {
-    font-size: 11px;
-    padding: 2px 6px;
   }
 }
 </style>

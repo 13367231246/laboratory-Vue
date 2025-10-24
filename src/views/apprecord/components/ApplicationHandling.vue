@@ -37,14 +37,28 @@
           </template>
 
           <template v-else-if="column.key === 'actions'">
-            <a-space v-if="record.status === 'pending'">
-              <a-button type="link" size="small" @click="viewApplicationDetail(record)">详情</a-button>
-              <a-button type="link" size="small" @click="approveApplication(record)" style="color: #52c41a">通过</a-button>
-              <a-button type="link" size="small" @click="rejectApplication(record)" style="color: #ff4d4f">拒绝</a-button>
-            </a-space>
-            <a-space v-else>
-              <a-button type="link" size="small" @click="viewApplicationDetail(record)">详情</a-button>
-            </a-space>
+            <a-dropdown>
+              <a-button type="link" size="small">
+                操作
+                <DownOutlined />
+              </a-button>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item key="detail" @click="viewApplicationDetail(record)">
+                    <EyeOutlined />
+                    详情
+                  </a-menu-item>
+                  <a-menu-item v-if="record.status === 'pending'" key="approve" @click="approveApplication(record)">
+                    <CheckOutlined />
+                    通过
+                  </a-menu-item>
+                  <a-menu-item v-if="record.status === 'pending'" key="reject" @click="rejectApplication(record)" danger>
+                    <CloseOutlined />
+                    拒绝
+                  </a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
           </template>
         </template>
       </a-table>
@@ -72,7 +86,7 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { message } from 'ant-design-vue'
-import { SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { SearchOutlined, ReloadOutlined, DownOutlined, EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -177,7 +191,7 @@ const applicationColumns = [
   {
     title: '操作',
     key: 'actions',
-    width: 120,
+    width: 50,
     fixed: 'right'
   }
 ]
