@@ -133,14 +133,6 @@ const menuItems = computed(() => {
       }
     )
   }
-
-  // 所有用户都有的菜单
-  baseItems.push({
-    key: 'satisfaction',
-    icon: () => h(TeamOutlined),
-    label: '满意度评价'
-  })
-
   return baseItems
 })
 
@@ -192,14 +184,6 @@ const mobileMenuItems = computed(() => {
       }
     )
   }
-
-  // 所有用户都有的菜单
-  baseItems.push({
-    key: 'satisfaction',
-    icon: () => h(TeamOutlined),
-    label: '满意度评价'
-  })
-
   return baseItems
 })
 
@@ -213,7 +197,6 @@ const handleMenuClick = ({ key }) => {
     'lab-application': '/lab-application',
     'application-record': '/application-record',
     'repair-handling': '/repair-handling',
-    satisfaction: '/satisfaction',
     message: '/message'
   }
 

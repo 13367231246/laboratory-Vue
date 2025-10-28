@@ -150,13 +150,6 @@ const recentActivities = ref([
     description: '物理实验教学',
     status: 'completed',
     time: '3天前'
-  },
-  {
-    type: 'satisfaction',
-    title: '满意度评价',
-    description: '对实验室服务进行评价',
-    status: 'completed',
-    time: '5天前'
   }
 ])
 

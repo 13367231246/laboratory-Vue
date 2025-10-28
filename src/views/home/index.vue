@@ -168,18 +168,6 @@ const quickActions = computed(() => {
       title: '设备报修',
       description: '报告设备故障',
       icon: ToolOutlined
-    },
-    {
-      key: 'satisfaction',
-      title: '满意度评价',
-      description: '提交使用反馈',
-      icon: TeamOutlined
-    },
-    {
-      key: 'satisfaction-detail',
-      title: '评价详情',
-      description: '查看评价详情',
-      icon: FileTextOutlined
     }
   ]
 
