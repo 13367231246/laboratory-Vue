@@ -118,7 +118,10 @@ const router = useRouter()
 const userStore = useUserStore()
 
 // 用户信息
-const userInfo = computed(() => userStore.userInfo)
+const userInfo = computed(() => {
+  console.log('userInfo111', userStore.userInfo);
+  return userStore.userInfo
+})
 
 // 用户统计数据
 const userStats = ref({
@@ -219,8 +222,7 @@ const goToSettings = () => {
 }
 
 // 生命周期
-onMounted(() => {
-  // 加载用户数据
+onMounted(async () => {
 })
 </script>
 
@@ -281,16 +283,19 @@ onMounted(() => {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
 .quick-actions-content {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
+
   @media (max-width: 768px) {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
 }
+
 /* 移动端适配 */
 @media (max-width: 768px) {
   .user-profile-page {

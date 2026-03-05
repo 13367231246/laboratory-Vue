@@ -17,7 +17,8 @@
           </a-form-item>
 
           <a-form-item name="password">
-            <a-input-password v-model:value="formData.password" size="large" placeholder="密码" :prefix="h(LockOutlined)" />
+            <a-input-password v-model:value="formData.password" size="large" placeholder="密码"
+              :prefix="h(LockOutlined)" />
           </a-form-item>
 
           <a-form-item name="userType">
@@ -35,7 +36,8 @@
           </a-form-item>
 
           <a-form-item>
-            <a-button type="primary" html-type="submit" size="large" :loading="loading" class="login-button" block> 登录 </a-button>
+            <a-button type="primary" html-type="submit" size="large" class="login-button" block> 登录
+            </a-button>
             <!-- 注册按钮 -->
             <a-button html-type="submit" size="large" class="login-button" block @click="goToRegister"> 去注册 </a-button>
           </a-form-item>
@@ -88,7 +90,6 @@ const userStore = useUserStore()
 
 // 响应式数据
 const formRef = ref()
-const loading = ref(false)
 
 // 表单数据
 const formData = reactive({
@@ -111,26 +112,15 @@ const formRules = {
 
 // 事件处理
 const handleLogin = async () => {
-  try {
-    await formRef.value.validate()
-    loading.value = true
+  await formRef.value.validate()
+  // 使用用户状态管理进行登录
+  const result = await userStore.login(formData)
 
-    // 使用用户状态管理进行登录
-    const result = await userStore.login({
-      username: formData.username,
-      password: formData.password,
-      userType: formData.userType,
-      idNumber: formData.idNumber
-    })
-
-    if (result.success) {
-      message.success('登录成功！')
-      router.push('/')
-    } else {
-      message.error('登录失败，请检查用户名和密码')
-    }
-  } finally {
-    loading.value = false
+  if (result.success) {
+    message.success('登录成功！')
+    router.push('/')
+  } else {
+    message.error(result.error || '登录失败，请检查用户名和密码')
   }
 }
 

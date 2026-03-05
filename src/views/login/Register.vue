@@ -12,27 +12,37 @@
             <a-input v-model:value="formData.username" size="large" placeholder="用户名" :prefix="h(UserOutlined)" />
           </a-form-item>
 
-          <a-form-item name="email">
-            <a-input v-model:value="formData.email" size="large" placeholder="邮箱" :prefix="h(MailOutlined)" />
+          <a-form-item name="realName">
+            <a-input v-model:value="formData.realName" size="large" placeholder="真实姓名" :prefix="h(UserOutlined)" />
+          </a-form-item>
+
+          <a-form-item name="studentId">
+            <a-input v-model:value="formData.studentId" size="large" placeholder="学号/学工号" :prefix="h(UserOutlined)" />
           </a-form-item>
 
           <a-form-item name="phone">
             <a-input v-model:value="formData.phone" size="large" placeholder="手机号" :prefix="h(PhoneOutlined)" />
           </a-form-item>
 
-          <a-form-item name="userType">
-            <a-radio-group v-model:value="formData.userType" class="user-type-group">
+          <a-form-item name="email">
+            <a-input v-model:value="formData.email" size="large" placeholder="邮箱" :prefix="h(MailOutlined)" />
+          </a-form-item>
+
+          <a-form-item name="role">
+            <a-radio-group v-model:value="formData.role" class="user-type-group">
               <a-radio-button value="teacher">教师</a-radio-button>
               <a-radio-button value="student">学生</a-radio-button>
             </a-radio-group>
           </a-form-item>
 
           <a-form-item name="password">
-            <a-input-password v-model:value="formData.password" size="large" placeholder="密码" :prefix="h(LockOutlined)" />
+            <a-input-password v-model:value="formData.password" size="large" placeholder="密码"
+              :prefix="h(LockOutlined)" />
           </a-form-item>
 
           <a-form-item name="confirmPassword">
-            <a-input-password v-model:value="formData.confirmPassword" size="large" placeholder="确认密码" :prefix="h(LockOutlined)" />
+            <a-input-password v-model:value="formData.confirmPassword" size="large" placeholder="确认密码"
+              :prefix="h(LockOutlined)" />
           </a-form-item>
 
           <a-form-item name="agreement">
@@ -45,7 +55,8 @@
           </a-form-item>
 
           <a-form-item>
-            <a-button type="primary" html-type="submit" size="large" :loading="loading" class="register-button" block> 注册 </a-button>
+            <a-button type="primary" html-type="submit" size="large" :loading="loading" class="register-button" block>
+              注册 </a-button>
           </a-form-item>
 
           <div class="register-footer">
@@ -88,6 +99,7 @@ import { ref, reactive, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { UserOutlined, MailOutlined, PhoneOutlined, LockOutlined, ExperimentOutlined, ToolOutlined, FileTextOutlined, TeamOutlined } from '@ant-design/icons-vue'
+import { userRegisterService } from '@/api/user'
 
 const router = useRouter()
 
@@ -98,9 +110,11 @@ const loading = ref(false)
 // 表单数据
 const formData = reactive({
   username: '',
+  realName: '',
+  studentId: '',
   email: '',
   phone: '',
-  userType: 'student',
+  role: 'student',
   password: '',
   confirmPassword: '',
   agreement: false
@@ -109,8 +123,14 @@ const formData = reactive({
 // 表单验证规则
 const formRules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度在3到20个字符', trigger: 'blur' }
+    { required: true, message: '请输入用户名', trigger: 'blur' }
+  ],
+  realName: [
+    { required: true, message: '请输入真实姓名', trigger: 'blur' },
+    { min: 2, max: 20, message: '姓名长度在2到20个字符', trigger: 'blur' }
+  ],
+  studentId: [
+    { required: true, message: '请输入学号/学工号', trigger: 'blur' }
   ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
@@ -120,7 +140,7 @@ const formRules = {
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ],
-  userType: [{ required: true, message: '请选择用户类型', trigger: 'change' }],
+  role: [{ required: true, message: '请选择用户类型', trigger: 'change' }],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '密码长度在6到20个字符', trigger: 'blur' }
@@ -152,16 +172,31 @@ const formRules = {
 
 // 事件处理
 const handleRegister = async () => {
-  try {
-    await formRef.value.validate()
-    loading.value = true
+  await formRef.value.validate()
+  loading.value = true
 
-    // 模拟注册API调用
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+  // 只提交后端需要的字段
+  const payload = {
+    // 后端 RegisterRequest 需要 username，这里用学号/工号作为用户名
+    username: formData.username,
+    password: formData.password,
+    realName: formData.realName,
+    studentId: formData.studentId,
+    phone: formData.phone,
+    email: formData.email,
+    role: formData.role
+  }
 
+  const result = await userRegisterService(payload).catch((error) => {
+    // 这里不会抛出异常到外面，避免 Unhandled error
+    message.error(error.message || '注册失败，请稍后重试')
+    loading.value = false
+    return null
+  })
+
+  if (result !== null) {
     message.success('注册成功！请登录')
     router.push('/login')
-  } finally {
     loading.value = false
   }
 }

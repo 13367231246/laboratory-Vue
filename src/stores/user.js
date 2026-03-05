@@ -1,5 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { userLoginService, getUserInfoService } from '@/api/user'
+import { saveLoginSuccess, logout as authLogout } from '@/utils/auth'
 
 export const useUserStore = defineStore('user', () => {
   // 用户信息 - 默认为未登录状态
@@ -25,87 +27,61 @@ export const useUserStore = defineStore('user', () => {
 
   // 登录
   const login = async (credentials) => {
-    try {
-      // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    // 调用登录API
+    const token = await userLoginService({
+      password: credentials.password,
+      studentId: credentials.idNumber,
+      phone: credentials.username,
+      role: credentials.userType
+    })
+    console.log('token',token)
 
-      // 检查默认账号
-      if (credentials.username === '123456' && credentials.password === '123456') {
-        // 默认账号登录
-        const userData = {
-          id: 1,
-          name: '张老师',
-          role: 'teacher',
-          username: credentials.username,
-          idNumber: credentials.idNumber || 'T20230001',
-          avatar: '',
-          email: 'zhang@university.edu',
-          phone: '13800138001',
-          department: '计算机学院',
-          isLoggedIn: true,
-          token: 'mock_token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-        }
+    // 登录成功，保存token
+    userInfo.value.token = token
+    userInfo.value.isLoggedIn = true
+    userInfo.value.role = credentials.userType
+    userInfo.value.phone = credentials.username
+    userInfo.value.idNumber = credentials.idNumber
 
-        userInfo.value = userData
+    // 获取用户详细信息
+    const userDetail = await getUserInfoService()
 
-        // 保存到localStorage
-        localStorage.setItem('userInfo', JSON.stringify(userData))
-        localStorage.setItem('isLoggedIn', 'true')
-        localStorage.setItem('token', userData.token)
-
-        return { success: true, data: userData }
+    if (userDetail) {
+      userInfo.value = {
+        ...userInfo.value,
+        id: userDetail.id,
+        name: userDetail.realName || userDetail.name,
+        username: userDetail.username || credentials.username,
+        email: userDetail.email || '',
+        avatar: userDetail.avatar || '',
+        department: userDetail.department || ''
       }
-
-      // 根据用户类型返回不同的用户信息
-      let userData = {}
-      switch (credentials.userType) {
-        case 'teacher':
-          userData = {
-            id: 1,
-            name: '张老师',
-            role: 'teacher',
-            username: credentials.username,
-            idNumber: credentials.idNumber || 'T20230001',
-            avatar: '',
-            email: 'zhang@university.edu',
-            phone: '13800138001',
-            department: '计算机学院',
-            isLoggedIn: true,
-            token: 'mock_token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-          }
-          break
-        case 'student':
-          userData = {
-            id: 2,
-            name: '李同学',
-            role: 'student',
-            username: credentials.username,
-            idNumber: credentials.idNumber || 'S20230001',
-            avatar: '',
-            email: 'li@student.edu',
-            phone: '13800138002',
-            department: '计算机学院',
-            isLoggedIn: true,
-            token: 'mock_token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-          }
-          break
-      }
-
-      userInfo.value = userData
-
-      // 保存到localStorage
-      localStorage.setItem('userInfo', JSON.stringify(userData))
-      localStorage.setItem('isLoggedIn', 'true')
-      localStorage.setItem('token', userData.token)
-
-      return { success: true, data: userData }
-    } catch (error) {
-      return { success: false, error: error.message }
     }
+
+    // 统一保存到 auth 本地存储
+    saveLoginSuccess(token, userDetail || {
+      id: userInfo.value.id,
+      username: userInfo.value.username,
+      realName: userInfo.value.name,
+      studentId: userInfo.value.idNumber,
+      phone: userInfo.value.phone,
+      email: userInfo.value.email,
+      role: userInfo.value.role,
+      status: 1
+    })
+
+    // 保存到localStorage
+    localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+    localStorage.setItem('isLoggedIn', 'true')
+    localStorage.setItem('token', token)
+
+    return { success: true, data: userInfo.value }
   }
 
   // 登出 - 重置为未登录状态
   const logout = () => {
+    authLogout()
+
     userInfo.value = {
       id: null,
       name: '',

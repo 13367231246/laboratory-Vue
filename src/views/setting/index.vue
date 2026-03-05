@@ -21,23 +21,17 @@
       <a-col :xs="24" :lg="18">
         <!-- 个人资料设置 -->
         <a-card v-if="selectedMenu.includes('profile')" title="个人资料" class="settings-content-card">
-          <a-form ref="profileFormRef" :model="profileForm" :rules="profileRules" layout="vertical" @finish="handleProfileSubmit">
+          <a-form ref="profileFormRef" :model="profileForm" :rules="profileRules" layout="vertical"
+            @finish="handleProfileSubmit">
             <a-row :gutter="24">
               <a-col :xs="24" :md="12">
-                <a-form-item label="头像" name="avatar">
-                  <div class="avatar-upload">
-                    <a-avatar :size="80" :src="profileForm.avatar">
-                      {{ profileForm.name?.charAt(0) }}
-                    </a-avatar>
-                    <a-upload :show-upload-list="false" :before-upload="beforeAvatarUpload" @change="handleAvatarChange">
-                      <a-button type="link">更换头像</a-button>
-                    </a-upload>
-                  </div>
+                <a-form-item label="姓名" name="realName">
+                  <a-input v-model:value="profileForm.realName" placeholder="请输入姓名" />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :md="12">
-                <a-form-item label="姓名" name="name">
-                  <a-input v-model:value="profileForm.name" placeholder="请输入姓名" />
+                <a-form-item label="学号/学工号" name="studentId">
+                  <a-input v-model:value="profileForm.studentId" disabled />
                 </a-form-item>
               </a-col>
             </a-row>
@@ -55,9 +49,23 @@
               </a-col>
             </a-row>
 
-            <a-form-item label="个人简介" name="bio">
-              <a-textarea v-model:value="profileForm.bio" placeholder="请输入个人简介" :rows="4" />
-            </a-form-item>
+            <a-row :gutter="24">
+              <a-col :xs="24" :md="8">
+                <a-form-item label="学院" name="college">
+                  <a-input v-model:value="profileForm.college" placeholder="请输入学院" />
+                </a-form-item>
+              </a-col>
+              <a-col :xs="24" :md="8">
+                <a-form-item label="专业" name="major">
+                  <a-input v-model:value="profileForm.major" placeholder="请输入专业" />
+                </a-form-item>
+              </a-col>
+              <a-col :xs="24" :md="8">
+                <a-form-item label="班级" name="className">
+                  <a-input v-model:value="profileForm.className" placeholder="请输入班级" />
+                </a-form-item>
+              </a-col>
+            </a-row>
 
             <a-form-item>
               <a-space>
@@ -70,7 +78,8 @@
 
         <!-- 安全设置 -->
         <a-card v-if="selectedMenu.includes('security')" title="安全设置" class="settings-content-card">
-          <a-form ref="securityFormRef" :model="securityForm" :rules="securityRules" layout="vertical" @finish="handleSecuritySubmit">
+          <a-form ref="securityFormRef" :model="securityForm" :rules="securityRules" layout="vertical"
+            @finish="handleSecuritySubmit">
             <a-form-item label="当前密码" name="currentPassword">
               <a-input-password v-model:value="securityForm.currentPassword" placeholder="请输入当前密码" />
             </a-form-item>
@@ -100,6 +109,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { modifyUserInfoService, modifyUserPasswordService, getUserInfoService } from '@/api/user'
+import { saveLoginSuccess } from '@/utils/auth'
 import { message } from 'ant-design-vue'
 import { UserOutlined, SafetyOutlined } from '@ant-design/icons-vue'
 
@@ -118,13 +129,17 @@ const menuMode = ref('vertical')
 const profileFormRef = ref()
 const securityFormRef = ref()
 
-// 个人资料表单
+// 个人资料表单（与后端 User 字段保持一致）
 const profileForm = reactive({
-  name: userStore.userInfo.name || '',
+  id: userStore.userInfo.id,
+  realName: userStore.userInfo.name || '',
+  studentId: userStore.userInfo.idNumber,
   email: userStore.userInfo.email || '',
   phone: userStore.userInfo.phone || '',
-  bio: userStore.userInfo.bio || '',
-  avatar: userStore.userInfo.avatar || ''
+  college: userStore.userInfo.college || '',
+  major: userStore.userInfo.major || '',
+  className: userStore.userInfo.className || '',
+  status: userStore.userInfo.status ?? 1
 })
 
 // 安全设置表单
@@ -136,7 +151,7 @@ const securityForm = reactive({
 
 // 表单验证规则
 const profileRules = {
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  realName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
@@ -169,68 +184,94 @@ const handleMenuClick = ({ key }) => {
   selectedMenu.value = [key]
 }
 
-const beforeAvatarUpload = (file) => {
-  const isImage = file.type.startsWith('image/')
-  if (!isImage) {
-    message.error('只能上传图片文件!')
-    return false
-  }
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isLt2M) {
-    message.error('图片大小不能超过 2MB!')
-    return false
-  }
-  return false // 阻止自动上传
-}
-
-const handleAvatarChange = (info) => {
-  if (info.file.status === 'done') {
-    profileForm.avatar = info.file.response?.url || info.file.thumbUrl
-  }
-}
-
+// 更新个人资料 -> 调用后端 /user/updateInfo，然后重新获取并写入 auth/localStorage
 const handleProfileSubmit = async () => {
-  try {
-    await profileFormRef.value.validate()
-    profileLoading.value = true
+  await profileFormRef.value.validate()
+  profileLoading.value = true
 
-    // 模拟API调用
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+  // 直接将当前表单（与后端 User 结构一致）作为入参
+  const payload = { ...profileForm }
 
-    // 更新用户信息
-    userStore.updateUserInfo(profileForm)
-    message.success('个人资料更新成功')
-  } catch (error) {
-    console.error('表单验证失败:', error)
-  } finally {
-    profileLoading.value = false
+  // 1. 调用更新接口（code=0 即为成功，data 可能为 null）
+  await modifyUserInfoService(payload)
+
+  // 2. 更新成功后，再次获取最新用户信息
+  const freshUser = await getUserInfoService().catch(() => {
+    // 获取失败不阻断，但不更新 auth
+    return null
+  })
+
+  if (freshUser) {
+    // 3. 使用 auth 工具统一更新本地存储（token 使用当前已登录 token）
+    const currentToken = userStore.userInfo.token
+    if (currentToken) {
+      saveLoginSuccess(currentToken, freshUser)
+    }
+
+    // 4. 同步更新 Pinia store 中的展示字段
+    userStore.updateUserInfo({
+      id: freshUser.id,
+      name: freshUser.realName || freshUser.name,
+      username: freshUser.username,
+      idNumber: freshUser.studentId,
+      email: freshUser.email,
+      phone: freshUser.phone,
+      role: freshUser.role,
+      college: freshUser.college,
+      major: freshUser.major,
+      className: freshUser.className,
+      status: freshUser.status
+    })
+  } else {
+    // 如果 freshUser 为空，至少用刚刚提交的表单数据更新本地
+    userStore.updateUserInfo({
+      name: payload.realName,
+      email: payload.email,
+      phone: payload.phone
+    })
   }
+
+  message.success('个人资料更新成功')
+  profileLoading.value = false
 }
 
+// 修改密码 -> 调用 /user/updatePwd
 const handleSecuritySubmit = async () => {
-  try {
-    await securityFormRef.value.validate()
-    securityLoading.value = true
+  await securityFormRef.value.validate()
+  securityLoading.value = true
 
-    // 模拟API调用
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+  const payload = {
+    old_pwd: securityForm.currentPassword,
+    new_pwd: securityForm.newPassword,
+    re_pwd: securityForm.confirmPassword
+  }
 
-    message.success('密码修改成功')
-    resetSecurityForm()
-  } catch (error) {
-    console.error('表单验证失败:', error)
-  } finally {
+  const result = await modifyUserPasswordService(payload).catch((error) => {
+    message.error(error.message || '密码修改失败')
     securityLoading.value = false
+    return null
+  })
+
+  if (result !== null) {
+    message.success('密码修改成功，请重新登录')
+    resetSecurityForm()
+    securityLoading.value = false
+    userStore.logout()
+    router.push('/login')
   }
 }
 
 const resetProfileForm = () => {
   Object.assign(profileForm, {
-    name: userStore.userInfo.name || '',
+    id: userStore.userInfo.id,
+    realName: userStore.userInfo.name || '',
+    studentId: userStore.userInfo.idNumber,
     email: userStore.userInfo.email || '',
     phone: userStore.userInfo.phone || '',
-    bio: userStore.userInfo.bio || '',
-    avatar: userStore.userInfo.avatar || ''
+    college: userStore.userInfo.college || '',
+    major: userStore.userInfo.major || '',
+    className: userStore.userInfo.className || '',
+    status: userStore.userInfo.status ?? 1
   })
 }
 
@@ -263,6 +304,7 @@ onMounted(() => {
 .user-settings-page {
   margin-top: 10px;
 }
+
 .settings-menu-card {
   padding: 10px 8px;
   border-radius: 8px;
@@ -274,43 +316,5 @@ onMounted(() => {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
-}
-
-.avatar-upload {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .settings-menu-card {
-    margin-bottom: 16px;
-  }
-
-  .avatar-upload {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  // 水平菜单样式
-  :deep(.ant-menu-horizontal) {
-    border-bottom: none;
-    display: flex;
-    justify-content: center;
-  }
-
-  :deep(.ant-menu-horizontal .ant-menu-item) {
-    flex: 1;
-    text-align: center;
-    border-radius: 6px;
-    margin: 0 4px;
-  }
-
-  :deep(.ant-menu-horizontal .ant-menu-item-selected) {
-    background-color: #e6f7ff;
-    color: #1890ff;
-  }
 }
 </style>
