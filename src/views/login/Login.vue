@@ -17,8 +17,7 @@
           </a-form-item>
 
           <a-form-item name="password">
-            <a-input-password v-model:value="formData.password" size="large" placeholder="密码"
-              :prefix="h(LockOutlined)" />
+            <a-input-password v-model:value="formData.password" size="large" placeholder="密码" :prefix="h(LockOutlined)" />
           </a-form-item>
 
           <a-form-item name="userType">
@@ -36,18 +35,11 @@
           </a-form-item>
 
           <a-form-item>
-            <a-button type="primary" html-type="submit" size="large" class="login-button" block> 登录
-            </a-button>
+            <a-button type="primary" html-type="submit" size="large" class="login-button" block> 登录 </a-button>
             <!-- 注册按钮 -->
             <a-button html-type="submit" size="large" class="login-button" block @click="goToRegister"> 去注册 </a-button>
           </a-form-item>
         </a-form>
-
-        <div class="login-footer">
-          <div class="login-tips">
-            <p class="tip-text">默认账号：123456，密码：123456</p>
-          </div>
-        </div>
       </div>
 
       <div class="login-banner">
@@ -56,16 +48,16 @@
           <p>高效管理实验室资源，简化申请流程，提升使用体验</p>
           <div class="feature-list">
             <div class="feature-item">
-              <ExperimentOutlined />
-              <span>实验室管理</span>
-            </div>
-            <div class="feature-item">
               <ToolOutlined />
               <span>设备报修</span>
             </div>
             <div class="feature-item">
               <FileTextOutlined />
               <span>申请流程</span>
+            </div>
+            <div class="feature-item">
+              <ExperimentOutlined />
+              <span>申请记录</span>
             </div>
             <div class="feature-item">
               <TeamOutlined />
@@ -227,25 +219,6 @@ checkLoginStatus()
   font-size: 16px;
   font-weight: 500;
   margin-bottom: 10px;
-}
-
-.login-footer {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.login-tips {
-  margin-bottom: 16px;
-}
-
-.tip-text {
-  color: #666;
-  font-size: 14px;
-  margin: 0;
-  padding: 8px 12px;
-  background: #f0f2f5;
-  border-radius: 4px;
-  border: 1px dashed #d9d9d9;
 }
 
 .login-banner {

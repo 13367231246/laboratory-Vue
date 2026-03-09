@@ -1,26 +1,35 @@
 <template>
   <div class="repair-detail" v-if="repair">
     <a-descriptions :column="2" bordered size="small" class="detail-descriptions">
-      <a-descriptions-item label="报修类型">
-        {{ getRepairTypeText(repair.repairType) }}
+      <a-descriptions-item label="问题类型">
+        {{ getIssueTypeText(repair.issueType || repair.issue_type) }}
       </a-descriptions-item>
       <a-descriptions-item label="实验室">
-        {{ repair.labName }}
+        {{ repair.labName || repair.lab_name }}
+      </a-descriptions-item>
+      <a-descriptions-item label="位置">
+        {{ repair.location }}
       </a-descriptions-item>
       <a-descriptions-item label="设备名称">
-        {{ repair.equipmentName }}
+        {{ repair.equipmentName || repair.equipment_name }}
       </a-descriptions-item>
-      <a-descriptions-item label="紧急程度">
-        <a-tag :color="getUrgencyColor(repair.urgency)">{{ getUrgencyText(repair.urgency) }}</a-tag>
+      <a-descriptions-item label="设备型号">
+        {{ repair.equipmentModel || repair.equipment_model }}
+      </a-descriptions-item>
+      <a-descriptions-item label="设备类型">
+        {{ repair.equipmentType || repair.equipment_type }}
+      </a-descriptions-item>
+      <a-descriptions-item label="资产编号">
+        {{ repair.assetNumber || repair.asset_number }}
       </a-descriptions-item>
       <a-descriptions-item label="报修人">
-        {{ repair.reporter }}
+        {{ repair.reporterName || repair.reporter_name || repair.reporter }}
       </a-descriptions-item>
       <a-descriptions-item label="联系方式">
         {{ repair.contactInfo }}
       </a-descriptions-item>
       <a-descriptions-item label="报修时间">
-        {{ repair.reportTime }}
+        {{ repair.reportTime || repair.createTime || repair.create_time }}
       </a-descriptions-item>
       <a-descriptions-item label="当前状态">
         <a-tag :color="getStatusColor(repair.status)">{{ getStatusText(repair.status) }}</a-tag>
@@ -86,9 +95,14 @@ const getUrgencyText = (urgency) => {
   return textMap[urgency] || '未知'
 }
 
-const getRepairTypeText = (type) => {
-  const typeMap = { equipment: '设备故障', environment: '环境问题', safety: '安全问题' }
-  return typeMap[type] || '未知'
+const getIssueTypeText = (type) => {
+  const map = {
+    clean: '清洁',
+    repair: '维修',
+    accident: '事故',
+    other: '其他'
+  }
+  return map[type] || '未知'
 }
 </script>
 

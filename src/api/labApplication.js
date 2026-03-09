@@ -29,3 +29,10 @@ export const listMyApplications = (pageNo, pageSize) => {
 export const getDetail = (id) => {
   return request.get(`/lab-application/${id}`)
 }
+
+/**
+ * 获取今日维护申请（限制5条）
+ */
+export const listTodayApplications = () => {
+  return request.get('/maintenance/today')
+}

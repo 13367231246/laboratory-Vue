@@ -12,11 +12,11 @@
       <!-- 右侧功能区 -->
       <div class="header-right">
         <!-- 通知铃铛 -->
-        <a-badge :count="messageCount" :offset="[-5, 5]">
+        <!-- <a-badge :count="messageCount" :offset="[-5, 5]">
           <a-button type="text" class="notification-btn" @click="showMessages">
             <BellOutlined />
           </a-button>
-        </a-badge>
+        </a-badge> -->
 
         <!-- 用户信息 -->
         <template v-if="userStore.isLoggedIn">
@@ -99,11 +99,6 @@ const menuItems = computed(() => {
   if (userInfo.value.role === 'teacher') {
     baseItems.push(
       {
-        key: 'lab-management',
-        icon: () => h(ExperimentOutlined),
-        label: '实验室管理'
-      },
-      {
         key: 'lab-application',
         icon: () => h(FileTextOutlined),
         label: '申请实验室'
@@ -150,11 +145,6 @@ const mobileMenuItems = computed(() => {
   if (userInfo.value.role === 'teacher') {
     baseItems.push(
       {
-        key: 'lab-management',
-        icon: () => h(ExperimentOutlined),
-        label: '实验室管理'
-      },
-      {
         key: 'lab-application',
         icon: () => h(FileTextOutlined),
         label: '申请实验室'
@@ -193,7 +183,6 @@ const handleMenuClick = ({ key }) => {
 
   const routeMap = {
     home: '/',
-    'lab-management': '/lab-management',
     'lab-application': '/lab-application',
     'application-record': '/application-record',
     'repair-handling': '/repair-handling',

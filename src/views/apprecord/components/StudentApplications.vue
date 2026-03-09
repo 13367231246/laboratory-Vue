@@ -67,13 +67,13 @@
                     <CheckOutlined />
                     完成
                   </a-menu-item>
+                  <a-menu-item v-if="activeTab === 'lab' && (record.status === 'completed' || record.status === 'using')" key="repair" @click="handleRepair(record)">
+                    <ToolOutlined />
+                    报修
+                  </a-menu-item>
                   <a-menu-item v-if="record.status === 'completed' || record.status === 'cancelled'" key="delete" @click="handleDelete(record)" danger>
                     <DeleteOutlined />
                     删除
-                  </a-menu-item>
-                  <a-menu-item v-if="activeTab === 'lab'" key="repair" @click="handleRepair(record)">
-                    <ToolOutlined />
-                    报修
                   </a-menu-item>
                 </a-menu>
               </template>
@@ -180,6 +180,8 @@ const mapEquipmentRecord = (item) => {
   return {
     ...item,
     type: 'equipment',
+    labId: item.laboratoryId ?? item.labId ?? item.laboratory?.id,
+    equipmentId: item.equipmentId ?? item.equipment?.id,
     equipmentName: item.equipmentName || item.equipment_name || item.equipment?.equipmentName || item.equipment?.name || '',
     quantity: item.quantity,
     labName: item.labName || item.laboratoryName || item.laboratory?.labName || item.laboratory?.name || '',
@@ -433,6 +435,7 @@ const handleRepair = (record) => {
     path: '/repair-report',
     query: {
       labId: record.labId,
+      equipmentId: record.equipmentId,
       labName: record.labName,
       applicant: record.applicant,
       applicationId: record.id

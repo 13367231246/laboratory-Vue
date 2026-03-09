@@ -13,3 +13,10 @@ export const listAvailable = () => {
 export const getEquipmentByLaboratoryId = (id) => {
   return request.get(`/laboratory/${id}/equipment`)
 }
+
+/**
+ * 获取实验室汇总统计
+ */
+export const getLaboratorySummary = () => {
+  return request.get('/laboratory/summary')
+}

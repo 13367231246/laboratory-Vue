@@ -31,7 +31,7 @@
       </a-col>
       <a-col :xs="12" :sm="12" :md="6">
         <a-card class="stat-card">
-          <a-statistic title="使用中实验室" :value="stats.usingLabs" :value-style="{ color: '#1890ff' }">
+          <a-statistic title="使用中实验室" :value="stats.inUseLabs" :value-style="{ color: '#1890ff' }">
             <template #prefix>
               <ClockCircleOutlined />
             </template>
@@ -40,7 +40,7 @@
       </a-col>
       <a-col :xs="12" :sm="12" :md="6">
         <a-card class="stat-card">
-          <a-statistic title="待维修设备" :value="stats.pendingRepairs" :value-style="{ color: '#cf1322' }">
+          <a-statistic title="待维修设备" :value="stats.pendingMaintenanceEquipment" :value-style="{ color: '#cf1322' }">
             <template #prefix>
               <ToolOutlined />
             </template>
@@ -83,7 +83,7 @@
 
     <!-- 最近活动 -->
     <a-row :gutter="24" class="recent-activities-section">
-      <a-col :xs="24" :lg="12">
+      <a-col v-if="userStore.isLoggedIn" :xs="24" :lg="12">
         <a-card title="最近申请" class="activities-card">
           <a-list :data-source="recentApplications" :loading="loading">
             <template #renderItem="{ item }">
@@ -94,7 +94,7 @@
                   </template>
                   <template #description>
                     <div class="activity-meta">
-                      <span class="applicant">申请人：{{ item.applicant }}</span>
+                      <!-- <span class="applicant">申请人：{{ item.applicant }}</span> -->
                       <a-tag :color="getStatusColor(item.status)">{{ getStatusText(item.status) }}</a-tag>
                       <span class="activity-time">{{ item.createTime }}</span>
                     </div>
@@ -130,28 +130,35 @@
 </template>
 
 <script setup>
-import { ExperimentOutlined, ClockCircleOutlined, ToolOutlined, FileTextOutlined, SettingOutlined, TeamOutlined } from '@ant-design/icons-vue'
+import { ExperimentOutlined, ClockCircleOutlined, ToolOutlined, FileTextOutlined, SettingOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { useLabStore } from '@/stores/lab'
 import { useRepairStore } from '@/stores/repair'
-import { useApplicationStore } from '@/stores/application'
 import { useUserStore } from '@/stores/user'
 import { listByPublished } from '@/api/document'
+import { getLaboratorySummary } from '@/api/laboratory'
+import { listTodayApplications } from '@/api/labApplication'
 
 const router = useRouter()
 const labStore = useLabStore()
 const repairStore = useRepairStore()
-const applicationStore = useApplicationStore()
 const userStore = useUserStore()
 
 // 响应式数据
 const loading = ref(false)
 
+const summary = ref({
+  availableLabs: 0,
+  inUseLabs: 0,
+  pendingMaintenanceEquipment: 0,
+  todayApplications: 0
+})
+
 // 统计数据
 const stats = computed(() => ({
-  availableLabs: labStore.stats.availableLabs,
-  usingLabs: labStore.stats.usingLabs,
-  pendingRepairs: repairStore.stats.pending,
-  todayApplications: applicationStore.stats.monthly
+  availableLabs: summary.value.availableLabs,
+  inUseLabs: summary.value.inUseLabs,
+  pendingMaintenanceEquipment: summary.value.pendingMaintenanceEquipment,
+  todayApplications: summary.value.todayApplications
 }))
 
 // 快速操作配置
@@ -174,10 +181,10 @@ const quickActions = computed(() => {
   // 根据用户角色添加特定操作
   if (userStore.isTeacher) {
     baseActions.unshift({
-      key: 'lab-management',
-      title: '实验室管理',
-      description: '管理实验室信息',
-      icon: SettingOutlined
+      key: 'application-record',
+      title: '申请记录',
+      description: '查看申请记录',
+      icon: FileTextOutlined
     })
     baseActions.unshift({
       key: 'repair-handling',
@@ -187,17 +194,26 @@ const quickActions = computed(() => {
     })
   }
 
+  if (!userStore.isLoggedIn) {
+    return baseActions.filter((item) => item.key !== 'application-record')
+  }
+
   return baseActions
 })
 
-// 最近申请数据
+// 今日维护申请数据
+const todayApplications = ref([])
+
+// 最近申请数据（今日维护申请）
 const recentApplications = computed(() => {
-  return applicationStore.applications.slice(0, 5).map((app) => ({
-    id: app.id,
-    labName: app.labName,
-    applicant: app.applicant,
-    status: app.status,
-    createTime: app.applyTime
+  return todayApplications.value.map((item) => ({
+    id: item.id,
+    labName: item.labName || item.laboratory?.labName || '',
+    applicant: item.reporter || item.applicant || '',
+    status: item.status === 0 ? 'pending' : item.status === 1 ? 'repairing' : 'completed',
+    createTime: item.reportTime || item.createTime || '',
+    description: item.description || '',
+    equipmentName: item.equipmentName || item.equipment?.equipmentName || ''
   }))
 })
 
@@ -215,12 +231,12 @@ const goToRepair = () => {
 
 const handleQuickAction = (key) => {
   const routeMap = {
-    'lab-management': '/lab-management',
     'repair-handling': '/repair-handling',
     'apply-lab': '/lab-application',
     'repair-report': '/repair-report',
+    'application-record': '/application-record',
+    'personal-settings': '/setting',
     'lab-search': '/lab-search',
-    satisfaction: '/satisfaction',
     'satisfaction-detail': '/satisfaction-detail'
   }
 
@@ -269,10 +285,26 @@ onMounted(() => {
 
 const loadData = async () => {
   loading.value = true
-  listByPublished(1, 10)
-    .then((data) => {
-      const list = data?.items ?? data?.records ?? data?.list ?? []
-      notices.value = list
+
+  // 并行加载数据
+  Promise.all([getLaboratorySummary(), listTodayApplications(), listByPublished(1, 10)])
+    .then(([labSummary, maintenanceData, noticeData]) => {
+      // 实验室汇总数据
+      summary.value.availableLabs = labSummary?.availableLabs ?? 0
+      summary.value.inUseLabs = labSummary?.inUseLabs ?? 0
+      summary.value.pendingMaintenanceEquipment = labSummary?.pendingMaintenanceEquipment ?? 0
+      summary.value.todayApplications = labSummary?.todayApplications ?? 0
+
+      // 今日维护申请数据
+      const maintenanceList = maintenanceData?.items ?? maintenanceData?.records ?? maintenanceData?.list ?? (Array.isArray(maintenanceData) ? maintenanceData : [])
+      todayApplications.value = maintenanceList.slice(0, 5)
+
+      // 系统公告数据
+      const noticeList = noticeData?.items ?? noticeData?.records ?? noticeData?.list ?? []
+      notices.value = noticeList
+    })
+    .catch(() => {
+      // 静默处理错误，不显示错误信息
     })
     .finally(() => {
       loading.value = false

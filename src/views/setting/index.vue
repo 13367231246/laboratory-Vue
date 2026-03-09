@@ -21,8 +21,7 @@
       <a-col :xs="24" :lg="18">
         <!-- 个人资料设置 -->
         <a-card v-if="selectedMenu.includes('profile')" title="个人资料" class="settings-content-card">
-          <a-form ref="profileFormRef" :model="profileForm" :rules="profileRules" layout="vertical"
-            @finish="handleProfileSubmit">
+          <a-form ref="profileFormRef" :model="profileForm" :rules="profileRules" layout="vertical" @finish="handleProfileSubmit">
             <a-row :gutter="24">
               <a-col :xs="24" :md="12">
                 <a-form-item label="姓名" name="realName">
@@ -51,17 +50,23 @@
 
             <a-row :gutter="24">
               <a-col :xs="24" :md="8">
-                <a-form-item label="学院" name="college">
+                <a-form-item label="学院" name="college" v-if="!userStore.isTeacher">
                   <a-input v-model:value="profileForm.college" placeholder="请输入学院" />
                 </a-form-item>
-              </a-col>
-              <a-col :xs="24" :md="8">
-                <a-form-item label="专业" name="major">
-                  <a-input v-model:value="profileForm.major" placeholder="请输入专业" />
+                <a-form-item label="部门" name="department" v-if="userStore.isTeacher">
+                  <a-input v-model:value="profileForm.department" placeholder="请输入部门" />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :md="8">
-                <a-form-item label="班级" name="className">
+                <a-form-item label="专业" name="major" v-if="!userStore.isTeacher">
+                  <a-input v-model:value="profileForm.major" placeholder="请输入专业" />
+                </a-form-item>
+                <a-form-item label="职称" name="title" v-if="userStore.isTeacher">
+                  <a-input v-model:value="profileForm.title" placeholder="请输入职称" />
+                </a-form-item>
+              </a-col>
+              <a-col :xs="24" :md="8">
+                <a-form-item label="班级" name="className" v-if="!userStore.isTeacher">
                   <a-input v-model:value="profileForm.className" placeholder="请输入班级" />
                 </a-form-item>
               </a-col>
@@ -78,8 +83,7 @@
 
         <!-- 安全设置 -->
         <a-card v-if="selectedMenu.includes('security')" title="安全设置" class="settings-content-card">
-          <a-form ref="securityFormRef" :model="securityForm" :rules="securityRules" layout="vertical"
-            @finish="handleSecuritySubmit">
+          <a-form ref="securityFormRef" :model="securityForm" :rules="securityRules" layout="vertical" @finish="handleSecuritySubmit">
             <a-form-item label="当前密码" name="currentPassword">
               <a-input-password v-model:value="securityForm.currentPassword" placeholder="请输入当前密码" />
             </a-form-item>
@@ -139,6 +143,8 @@ const profileForm = reactive({
   college: userStore.userInfo.college || '',
   major: userStore.userInfo.major || '',
   className: userStore.userInfo.className || '',
+  department: userStore.userInfo.department || '',
+  title: userStore.userInfo.title || '',
   status: userStore.userInfo.status ?? 1
 })
 
@@ -220,6 +226,8 @@ const handleProfileSubmit = async () => {
       college: freshUser.college,
       major: freshUser.major,
       className: freshUser.className,
+      department: freshUser.department,
+      title: freshUser.title,
       status: freshUser.status
     })
   } else {

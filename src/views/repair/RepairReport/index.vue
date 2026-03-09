@@ -2,55 +2,51 @@
   <div class="repair-report-page">
     <a-card title="报修信息" class="repair-form-card">
       <a-form ref="formRef" :model="formData" :rules="formRules" @finish="handleSubmit">
-        <a-form-item label="报修类型" name="repairType">
-          <a-radio-group v-model:value="formData.repairType">
-            <a-radio value="equipment">设备故障</a-radio>
-            <a-radio value="environment">环境问题</a-radio>
-            <a-radio value="safety">安全问题</a-radio>
+        <a-form-item label="报修对象" name="targetType">
+          <a-radio-group v-model:value="formData.targetType" @change="handleTargetTypeChange">
+            <a-radio value="laboratory">实验室</a-radio>
+            <a-radio value="equipment">设备</a-radio>
           </a-radio-group>
         </a-form-item>
 
-        <a-form-item label="实验室" name="labId">
-          <a-select v-model:value="formData.labId" placeholder="请选择实验室" show-search :filter-option="filterOption" @change="handleLabChange">
-            <a-select-option v-for="lab in labs" :key="lab.id" :value="lab.id"> {{ lab.name }} - {{ lab.location }} </a-select-option>
+        <a-form-item label="实验室" name="laboratoryId">
+          <a-select v-model:value="formData.laboratoryId" placeholder="请选择实验室" show-search :filter-option="filterOption" @change="handleLabChange" :loading="labsLoading">
+            <a-select-option v-for="lab in labs" :key="lab.id" :value="lab.id" :label="`${lab.labName || ''} ${lab.location || ''}`" :disabled="lab.status !== 1"> {{ lab.labName }} - {{ lab.location }} </a-select-option>
           </a-select>
         </a-form-item>
 
-        <a-form-item label="故障设备" name="equipmentId" v-if="formData.repairType === 'equipment'">
-          <a-select v-model:value="formData.equipmentId" placeholder="请选择故障设备" show-search :filter-option="filterOption">
-            <a-select-option v-for="equipment in availableEquipment" :key="equipment.id" :value="equipment.id"> {{ equipment.name }} - {{ equipment.model }} </a-select-option>
+        <a-form-item label="故障设备" name="equipmentId" v-if="formData.targetType === 'equipment'">
+          <a-select v-model:value="formData.equipmentId" placeholder="请选择故障设备" show-search :filter-option="filterOption" :loading="equipmentLoading" :disabled="!formData.laboratoryId">
+            <a-select-option v-for="equipment in availableEquipment" :key="equipment.id" :value="equipment.id" :label="equipment.equipmentName || equipment.name || ''">
+              {{ equipment.equipmentName || equipment.name }}
+            </a-select-option>
           </a-select>
         </a-form-item>
 
-        <a-form-item label="故障描述" name="description">
-          <a-textarea v-model:value="formData.description" placeholder="请详细描述故障现象和问题" :rows="4" />
-        </a-form-item>
-
-        <a-form-item label="紧急程度" name="urgency">
-          <a-radio-group v-model:value="formData.urgency">
-            <a-radio value="low">低 - 不影响正常使用</a-radio>
-            <a-radio value="medium">中 - 影响部分功能</a-radio>
-            <a-radio value="high">高 - 严重影响使用</a-radio>
-            <a-radio value="critical">紧急 - 存在安全隐患</a-radio>
+        <a-form-item label="问题类型" name="issueType">
+          <a-radio-group v-model:value="formData.issueType">
+            <a-radio value="clean">清洁</a-radio>
+            <a-radio value="repair">维修</a-radio>
+            <a-radio value="accident">事故</a-radio>
+            <a-radio value="other">其他</a-radio>
           </a-radio-group>
         </a-form-item>
 
-        <a-form-item label="故障照片" name="images">
-          <a-upload v-model:file-list="formData.images" list-type="picture-card" :before-upload="beforeUpload" :max-count="5" accept="image/*">
-            <div v-if="formData.images.length < 5">
+        <a-form-item label="问题描述" name="description">
+          <a-textarea v-model:value="formData.description" placeholder="请详细描述问题" :rows="4" />
+        </a-form-item>
+
+        <!-- 故障图片：暂不接入，先注释掉 -->
+        <!--
+        <a-form-item label="故障照片" name="photos">
+          <a-upload v-model:file-list="formData.photos" list-type="picture-card" :before-upload="beforeUpload" :max-count="5" accept="image/*">
+            <div v-if="formData.photos.length < 5">
               <PlusOutlined />
               <div style="margin-top: 8px">上传照片</div>
             </div>
           </a-upload>
         </a-form-item>
-
-        <a-form-item label="联系方式" name="contactInfo">
-          <a-input v-model:value="formData.contactInfo" placeholder="请输入联系电话或邮箱" />
-        </a-form-item>
-
-        <a-form-item label="期望处理时间" name="expectedTime">
-          <a-date-picker v-model:value="formData.expectedTime" show-time format="YYYY-MM-DD HH:mm" :disabled-date="disabledDate" />
-        </a-form-item>
+        -->
 
         <a-space>
           <a-button type="primary" html-type="submit" :loading="submitting"> 提交报修 </a-button>
@@ -64,16 +60,16 @@
       <div class="lab-info">
         <a-descriptions :column="1" size="small">
           <a-descriptions-item label="实验室名称">
-            {{ selectedLab.name }}
+            {{ selectedLab.labName || selectedLab.name }}
           </a-descriptions-item>
           <a-descriptions-item label="位置">
             {{ selectedLab.location }}
           </a-descriptions-item>
           <a-descriptions-item label="负责人">
-            {{ selectedLab.manager }}
+            {{ selectedLab.manager || selectedLab.managerName || selectedLab.teacherName || '' }}
           </a-descriptions-item>
           <a-descriptions-item label="联系电话">
-            {{ selectedLab.phone }}
+            {{ selectedLab.phone || selectedLab.managerPhone || '' }}
           </a-descriptions-item>
         </a-descriptions>
 
@@ -131,39 +127,24 @@
 
     <!-- 报修预览模态框 -->
     <a-modal v-model:open="previewVisible" title="报修预览" width="800px" :footer="null">
-      <div class="preview-content" v-if="formData.labId">
+      <div class="preview-content" v-if="formData.laboratoryId">
         <a-descriptions :column="2" bordered>
-          <a-descriptions-item label="报修类型">
-            {{ getRepairTypeText(formData.repairType) }}
+          <a-descriptions-item label="报修对象">
+            {{ formData.targetType === 'equipment' ? '设备' : '实验室' }}
           </a-descriptions-item>
           <a-descriptions-item label="实验室">
-            {{ selectedLab?.name }}
+            {{ selectedLab?.labName }}
           </a-descriptions-item>
-          <a-descriptions-item label="故障设备" v-if="formData.equipmentId">
-            {{ selectedEquipment?.name }}
+          <a-descriptions-item v-if="formData.targetType === 'equipment'" label="故障设备">
+            {{ selectedEquipment?.equipmentName || selectedEquipment?.name }}
           </a-descriptions-item>
-          <a-descriptions-item label="紧急程度">
-            <a-tag :color="getUrgencyColor(formData.urgency)">
-              {{ getUrgencyText(formData.urgency) }}
-            </a-tag>
+          <a-descriptions-item label="问题类型">
+            {{ getIssueTypeText(formData.issueType) }}
           </a-descriptions-item>
-          <a-descriptions-item label="故障描述" :span="2">
+          <a-descriptions-item label="问题描述" :span="2">
             {{ formData.description }}
           </a-descriptions-item>
-          <a-descriptions-item label="联系方式">
-            {{ formData.contactInfo }}
-          </a-descriptions-item>
-          <a-descriptions-item label="期望处理时间">
-            {{ formData.expectedTime?.format('YYYY-MM-DD HH:mm') || '无' }}
-          </a-descriptions-item>
         </a-descriptions>
-
-        <div v-if="formData.images.length > 0" class="preview-images">
-          <h4>故障照片</h4>
-          <a-image-preview-group>
-            <a-image v-for="(image, index) in formData.images" :key="index" :src="image.url || image.thumbUrl" :width="100" :height="100" style="margin-right: 8px; margin-bottom: 8px" />
-          </a-image-preview-group>
-        </div>
       </div>
     </a-modal>
   </div>
@@ -171,12 +152,13 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
-import dayjs from 'dayjs'
+import { listAvailable, getEquipmentByLaboratoryId } from '@/api/laboratory'
+import { applyMaintenance } from '@/api/maintenance'
 
 const router = useRouter()
+const route = useRoute()
 
 // 响应式数据
 const formRef = ref()
@@ -185,53 +167,38 @@ const previewVisible = ref(false)
 
 // 表单数据
 const formData = reactive({
-  repairType: 'equipment',
-  labId: undefined,
+  targetType: 'equipment',
+  laboratoryId: undefined,
   equipmentId: undefined,
-  description: '',
-  urgency: 'medium',
-  images: [],
-  contactInfo: '',
-  expectedTime: undefined
+  issueType: 'repair',
+  description: ''
+  // photos: []
 })
 
 // 表单验证规则
 const formRules = {
-  repairType: [{ required: true, message: '请选择报修类型', trigger: 'change' }],
-  labId: [{ required: true, message: '请选择实验室', trigger: 'change' }],
-  equipmentId: [{ required: true, message: '请选择故障设备', trigger: 'change' }],
-  description: [{ required: true, message: '请填写故障描述', trigger: 'blur' }],
-  urgency: [{ required: true, message: '请选择紧急程度', trigger: 'change' }],
-  contactInfo: [{ required: true, message: '请填写联系方式', trigger: 'blur' }]
+  targetType: [{ required: true, message: '请选择报修对象', trigger: 'change' }],
+  laboratoryId: [{ required: true, message: '请选择实验室', trigger: 'change' }],
+  equipmentId: [
+    {
+      validator: (_, value) => {
+        if (formData.targetType === 'equipment' && !value) {
+          return Promise.reject('请选择故障设备')
+        }
+        return Promise.resolve()
+      },
+      trigger: 'change'
+    }
+  ],
+  issueType: [{ required: true, message: '请选择问题类型', trigger: 'change' }],
+  description: [{ required: true, message: '请填写问题描述', trigger: 'blur' }]
 }
 
 // 实验室数据
-const labs = ref([
-  {
-    id: 1,
-    name: '计算机实验室A',
-    location: '教学楼A座201',
-    manager: '张老师',
-    phone: '13800138001',
-    equipment: [
-      { id: 1, name: '台式电脑', model: 'Dell OptiPlex', status: 0 },
-      { id: 2, name: '投影仪', model: 'Epson CB-X41', status: 0 },
-      { id: 3, name: '网络设备', model: 'Cisco Switch', status: 0 }
-    ]
-  },
-  {
-    id: 2,
-    name: '物理实验室B',
-    location: '实验楼B座301',
-    manager: '李老师',
-    phone: '13800138002',
-    equipment: [
-      { id: 4, name: '实验台', model: 'Lab Table Pro', status: 0 },
-      { id: 5, name: '测量仪器', model: 'Digital Multimeter', status: 0 },
-      { id: 6, name: '电源设备', model: 'Power Supply Unit', status: 0 }
-    ]
-  }
-])
+const labs = ref([])
+const labsLoading = ref(false)
+const equipmentLoading = ref(false)
+const equipmentList = ref([])
 
 // 报修须知
 const notices = ref([
@@ -271,11 +238,11 @@ const emergencyContacts = ref([
 
 // 计算属性
 const selectedLab = computed(() => {
-  return labs.value.find((lab) => lab.id === formData.labId)
+  return labs.value.find((lab) => lab.id === formData.laboratoryId)
 })
 
 const availableEquipment = computed(() => {
-  return selectedLab.value?.equipment || []
+  return equipmentList.value
 })
 
 const selectedEquipment = computed(() => {
@@ -284,60 +251,40 @@ const selectedEquipment = computed(() => {
 
 // 方法
 const filterOption = (input, option) => {
-  return option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+  const text = (option.label ?? option.children ?? '').toString().toLowerCase()
+  return text.indexOf((input || '').toLowerCase()) >= 0
 }
 
-const handleLabChange = (value) => {
-  // 清空设备选择
+const getIssueTypeText = (type) => {
+  const map = {
+    clean: '清洁',
+    repair: '维修',
+    accident: '事故',
+    other: '其他'
+  }
+  return map[type] || '未知'
+}
+
+const handleTargetTypeChange = () => {
   formData.equipmentId = undefined
 }
 
-const beforeUpload = (file) => {
-  const isImage = file.type.startsWith('image/')
-  if (!isImage) {
-    message.error('只能上传图片文件!')
-    return false
-  }
-  const isLt5M = file.size / 1024 / 1024 < 5
-  if (!isLt5M) {
-    message.error('图片大小不能超过 5MB!')
-    return false
-  }
-  return false // 阻止自动上传
-}
+const handleLabChange = () => {
+  const id = formData.laboratoryId
+  if (!id) return
 
-const disabledDate = (current) => {
-  // 禁用过去的日期
-  return current && current < dayjs().startOf('day')
-}
+  formData.equipmentId = undefined
+  equipmentList.value = []
 
-const getRepairTypeText = (type) => {
-  const typeMap = {
-    equipment: '设备故障',
-    environment: '环境问题',
-    safety: '安全问题'
-  }
-  return typeMap[type] || '未知'
-}
-
-const getUrgencyColor = (urgency) => {
-  const colorMap = {
-    low: 'green',
-    medium: 'blue',
-    high: 'orange',
-    critical: 'red'
-  }
-  return colorMap[urgency] || 'default'
-}
-
-const getUrgencyText = (urgency) => {
-  const textMap = {
-    low: '低',
-    medium: '中',
-    high: '高',
-    critical: '紧急'
-  }
-  return textMap[urgency] || '未知'
+  equipmentLoading.value = true
+  getEquipmentByLaboratoryId(id)
+    .then((list) => {
+      const arr = Array.isArray(list) ? list : (list?.items ?? list?.records ?? list?.list ?? [])
+      equipmentList.value = arr || []
+    })
+    .finally(() => {
+      equipmentLoading.value = false
+    })
 }
 
 const getEquipmentStatusColor = (status) => {
@@ -359,20 +306,35 @@ const getEquipmentStatusText = (status) => {
 }
 
 const handleSubmit = async () => {
-  try {
-    await formRef.value.validate()
-    submitting.value = true
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
 
-    // 模拟API调用
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    message.success('报修提交成功！')
-    router.push('/')
-  } catch (error) {
-    console.error('表单验证失败:', error)
-  } finally {
-    submitting.value = false
+  submitting.value = true
+  const lab = selectedLab.value
+  const eq = selectedEquipment.value
+  const payload = {
+    laboratoryId: formData.laboratoryId,
+    equipmentId: formData.targetType === 'equipment' ? formData.equipmentId : null,
+    labNumber: lab?.labNumber ?? lab?.lab_number ?? null,
+    labName: lab?.labName ?? lab?.name ?? null,
+    location: lab?.location ?? null,
+    equipmentName: formData.targetType === 'equipment' ? (eq?.equipmentName ?? eq?.name ?? eq?.equipment_name ?? null) : null,
+    equipmentType: formData.targetType === 'equipment' ? (eq?.equipmentType ?? eq?.type ?? eq?.equipment_type ?? null) : null,
+    equipmentModel: formData.targetType === 'equipment' ? (eq?.equipmentModel ?? eq?.model ?? eq?.equipment_model ?? null) : null,
+    assetNumber: formData.targetType === 'equipment' ? (eq?.assetNumber ?? eq?.serialNumber ?? eq?.asset_number ?? null) : null,
+    issueType: formData.issueType,
+    description: formData.description
+    // photos: ''
   }
+
+  applyMaintenance(payload)
+    .then(() => {
+      message.success('报修提交成功！')
+      formRef.value.resetFields()
+    })
+    .finally(() => {
+      submitting.value = false
+    })
 }
 
 const handleReset = () => {
@@ -380,7 +342,7 @@ const handleReset = () => {
 }
 
 const handlePreview = () => {
-  if (!formData.labId) {
+  if (!formData.laboratoryId) {
     message.warning('请先选择实验室')
     return
   }
@@ -389,12 +351,23 @@ const handlePreview = () => {
 
 // 生命周期
 onMounted(() => {
-  // 加载数据
-  // 检查是否有从申请记录页面传递的参数
-  const route = useRouter().currentRoute.value
+  labsLoading.value = true
+  listAvailable()
+    .then((data) => {
+      const list = Array.isArray(data) ? data : (data?.items ?? data?.records ?? data?.list ?? [])
+      labs.value = list || []
+    })
+    .finally(() => {
+      labsLoading.value = false
+    })
+
   if (route.query.labId) {
-    formData.labId = parseInt(route.query.labId)
-    formData.contactInfo = route.query.applicant || ''
+    formData.laboratoryId = parseInt(route.query.labId, 10)
+    handleLabChange()
+  }
+  if (route.query.equipmentId) {
+    formData.targetType = 'equipment'
+    formData.equipmentId = parseInt(route.query.equipmentId, 10)
   }
 })
 </script>
