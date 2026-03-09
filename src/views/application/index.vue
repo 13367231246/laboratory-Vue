@@ -9,12 +9,14 @@
           </a-radio-group>
         </a-form-item>
 
-        <a-form-item label="使用类型" name="usageType">
-          <a-radio-group v-model:value="formData.usageType">
-            <a-radio value="personal">个人使用</a-radio>
-            <a-radio value="course">课程使用</a-radio>
-          </a-radio-group>
-        </a-form-item>
+        <template v-if="formData.applicationType === 'lab'">
+          <a-form-item label="使用类型" name="usageType">
+            <a-radio-group v-model:value="formData.usageType">
+              <a-radio value="personal">个人使用</a-radio>
+              <a-radio value="course">课程使用</a-radio>
+            </a-radio-group>
+          </a-form-item>
+        </template>
 
         <a-form-item v-if="formData.usageType === 'course'" label="课程名称" name="courseName">
           <a-input v-model:value="formData.courseName" placeholder="请输入课程名称" />
@@ -42,43 +44,31 @@
 
         <!-- 申请设备时的表单 -->
         <template v-if="formData.applicationType === 'equipment'">
-          <a-form-item label="选择设备" name="equipmentId">
-            <a-select v-model:value="formData.equipmentId" placeholder="请选择要申请的设备" show-search
-              :filter-option="filterEquipmentOption" @change="handleEquipmentChange">
-              <a-select-option v-for="equipment in availableEquipment" :key="equipment.id" :value="equipment.id"
-                :disabled="equipment.status !== 0">
-                {{ equipment.name }} - {{ equipment.model }}
-                <a-tag :color="getEquipmentStatusColor(equipment.status)" size="small">
-                  {{ getEquipmentStatusText(equipment.status) }}
-                </a-tag>
-              </a-select-option>
-            </a-select>
-          </a-form-item>
+          <EquipmentApplicationForm :form-data="formData" :available-labs="availableLabs" :labs-loading="labsLoading"
+            :available-equipment="availableEquipment" :equipment-loading="equipmentLoading"
+            :filter-option="filterOption" :filter-equipment-option="filterEquipmentOption"
+            :on-lab-change="handleLabChange" :on-equipment-change="handleEquipmentChange"
+            :get-lab-status-color="getLabStatusColor" :get-lab-status-text="getLabStatusText"
+            :get-equipment-status-color="getEquipmentStatusColor" :get-equipment-status-text="getEquipmentStatusText"
+            :disabled-date="disabledDate" :disabled-time="disabledTime" />
         </template>
 
-        <a-form-item label="使用目的" name="purpose">
-          <a-textarea v-model:value="formData.purpose"
-            :placeholder="formData.applicationType === 'lab' ? '请详细描述使用实验室的目的和内容' : '请详细描述使用设备的目的和内容'" :rows="3" />
+        <a-form-item v-if="formData.applicationType === 'lab'" label="使用目的" name="purpose">
+          <a-textarea v-model:value="formData.purpose" placeholder="请详细描述使用实验室的目的和内容" :rows="3" />
         </a-form-item>
 
         <!-- 申请实验室：使用时间从后端可申请时间段中选择 -->
         <a-form-item v-if="formData.applicationType === 'lab'" label="使用时间" name="scheduleId">
           <a-select v-model:value="formData.scheduleId" placeholder="请先选择实验室，再选择可申请时间段" :loading="scheduleLoading"
             :disabled="!formData.labId" @change="onScheduleChange">
-            <a-select-option v-for="s in labScheduleList" :key="s.id" :value="s.id">
-              {{ formatScheduleTime(s.startTime) }} 至 {{ formatScheduleTime(s.endTime) }}
-            </a-select-option>
+            <a-select-option v-for="s in labScheduleList" :key="s.id" :value="s.id"> {{ formatScheduleTime(s.startTime)
+            }} 至 {{
+                formatScheduleTime(s.endTime) }} </a-select-option>
           </a-select>
         </a-form-item>
-        <!-- 申请设备：使用时间仍用时间范围选择 -->
-        <a-form-item v-else label="使用时间" name="timeRange">
-          <a-range-picker v-model:value="formData.timeRange" show-time format="YYYY-MM-DD HH:mm"
-            :disabled-date="disabledDate" :disabled-time="disabledTime" />
-        </a-form-item>
 
-        <a-form-item :label="formData.applicationType === 'lab' ? '预计人数' : '借用数量'" name="participantCount">
-          <a-input-number v-model:value="formData.participantCount" :min="1"
-            :max="formData.applicationType === 'lab' ? selectedLab?.capacity || 50 : selectedEquipment?.quantity || 10" />
+        <a-form-item v-if="formData.applicationType === 'lab'" label="预计人数" name="participantCount">
+          <a-input-number v-model:value="formData.participantCount" :min="1" :max="selectedLab?.capacity || 50" />
         </a-form-item>
 
         <!-- 申请实验室时：选中后调用接口展示该实验室设备 -->
@@ -87,7 +77,7 @@
             <template v-if="equipmentLoading">加载中...</template>
             <template v-else-if="labEquipmentList && labEquipmentList.length">
               <a-tag v-for="eq in labEquipmentList" :key="eq.id" color="blue">
-                {{ eq.equipmentName || eq.equipment_name }}{{ (eq.model) ? `（${eq.model}）` : '' }}
+                {{ eq.equipmentName || eq.equipment_name }}{{ eq.model ? `（${eq.model}）` : '' }}
                 <span v-if="eq.availableQuantity != null" class="eq-qty">可用 {{ eq.availableQuantity }} 台</span>
               </a-tag>
             </template>
@@ -217,9 +207,8 @@
           <a-descriptions-item label="使用类型">
             {{ formData.usageType === 'personal' ? '个人使用' : '课程使用' }}
           </a-descriptions-item>
-          <a-descriptions-item v-if="formData.applicationType === 'lab'" label="实验室">
-            {{ selectedLab?.labName }}（{{ selectedLab?.labNumber }}） - {{ selectedLab?.location }}
-          </a-descriptions-item>
+          <a-descriptions-item v-if="formData.applicationType === 'lab'" label="实验室"> {{ selectedLab?.labName }}（{{
+            selectedLab?.labNumber }}） - {{ selectedLab?.location }} </a-descriptions-item>
           <a-descriptions-item v-if="formData.usageType === 'course'" label="课程名称">
             {{ formData.courseName }}
           </a-descriptions-item>
@@ -241,9 +230,8 @@
           }} {{ formData.applicationType === 'lab' ? '人' : '台' }} </a-descriptions-item>
           <a-descriptions-item v-if="formData.applicationType === 'lab' && labEquipmentList?.length" label="实验室具有的设备"
             :span="2">
-            <a-tag v-for="eq in labEquipmentList" :key="eq.id" size="small" color="blue">
-              {{ eq.equipmentName || eq.equipment_name }}{{ eq.model ? `（${eq.model}）` : '' }}
-            </a-tag>
+            <a-tag v-for="eq in labEquipmentList" :key="eq.id" size="small" color="blue"> {{ eq.equipmentName ||
+              eq.equipment_name }}{{ eq.model ? `（${eq.model}）` : '' }} </a-tag>
           </a-descriptions-item>
           <a-descriptions-item label="特殊要求" :span="2">
             {{ formData.specialRequirements || '无' }}
@@ -262,10 +250,12 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
+import EquipmentApplicationForm from './components/EquipmentApplicationForm.vue'
 import { listDocumentByPublished } from '@/api/document'
 import { listAvailable, getEquipmentByLaboratoryId } from '@/api/laboratory'
 import { listByLaboratoryId } from '@/api/labSchedule'
 import { apply as submitLabApplication } from '@/api/labApplication'
+import { apply as submitEquipmentApplication } from '@/api/equipmentApplication'
 
 const router = useRouter()
 
@@ -295,7 +285,17 @@ const formRules = {
   applicationType: [{ required: true, message: '请选择申请类型', trigger: 'change' }],
   usageType: [{ required: true, message: '请选择使用类型', trigger: 'change' }],
   labId: [{ required: true, message: '请选择实验室', trigger: 'change' }],
-  equipmentId: [{ required: true, message: '请选择设备', trigger: 'change' }],
+  equipmentId: [
+    {
+      validator: (_, value) => {
+        if (formData.applicationType === 'equipment' && !value) {
+          return Promise.reject('请选择设备')
+        }
+        return Promise.resolve()
+      },
+      trigger: 'change'
+    }
+  ],
   purpose: [{ required: true, message: '请填写使用目的', trigger: 'blur' }],
   courseName: [
     {
@@ -361,54 +361,8 @@ const equipmentLoading = ref(false)
 const labScheduleList = ref([])
 const scheduleLoading = ref(false)
 
-// 可用设备数据
-const availableEquipment = ref([
-  {
-    id: 1,
-    name: '笔记本电脑',
-    model: 'Dell Latitude 5520',
-    status: 0,
-    quantity: 5,
-    location: '计算机实验室A',
-    manager: '张老师'
-  },
-  {
-    id: 2,
-    name: '投影仪',
-    model: 'Epson CB-X41',
-    status: 0,
-    quantity: 3,
-    location: '计算机实验室A',
-    manager: '张老师'
-  },
-  {
-    id: 3,
-    name: '示波器',
-    model: 'Tektronix TBS1000',
-    status: 0,
-    quantity: 2,
-    location: '物理实验室B',
-    manager: '李老师'
-  },
-  {
-    id: 4,
-    name: '万用表',
-    model: 'Fluke 115',
-    status: 1,
-    quantity: 8,
-    location: '物理实验室B',
-    manager: '李老师'
-  },
-  {
-    id: 5,
-    name: '显微镜',
-    model: 'Olympus CX23',
-    status: 0,
-    quantity: 4,
-    location: '化学实验室C',
-    manager: '王老师'
-  }
-])
+// 可用设备数据（选择实验室后从后端加载）
+const availableEquipment = ref([])
 
 // 申请须知：文档列表（协议/手册/规则等），仅展示标题、时间、类型，点击跳转详情
 const protocolDocs = ref([])
@@ -453,7 +407,8 @@ const filterOption = (input, option) => {
 }
 
 const filterEquipmentOption = (input, option) => {
-  return option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+  const text = (option.label ?? '').toString().toLowerCase()
+  return text.indexOf((input || '').toLowerCase()) >= 0
 }
 
 const handleApplicationTypeChange = () => {
@@ -465,11 +420,28 @@ const handleApplicationTypeChange = () => {
 }
 
 const handleLabChange = () => {
+  const id = formData.labId
+  if (!id) return
+
+  if (formData.applicationType === 'equipment') {
+    formData.equipmentId = undefined
+    availableEquipment.value = []
+
+    equipmentLoading.value = true
+    getEquipmentByLaboratoryId(id)
+      .then((list) => {
+        const arr = Array.isArray(list) ? list : (list?.items ?? list?.records ?? list?.list ?? [])
+        availableEquipment.value = arr || []
+      })
+      .finally(() => {
+        equipmentLoading.value = false
+      })
+    return
+  }
+
   labEquipmentList.value = []
   labScheduleList.value = []
   formData.scheduleId = undefined
-  const id = formData.labId
-  if (!id) return
 
   equipmentLoading.value = true
   getEquipmentByLaboratoryId(id)
@@ -496,8 +468,8 @@ const handleLabChange = () => {
           slots = rule.timeSlots
         }
         slots.forEach((slot, slotIndex) => {
-          const start = (slot.start || '').length === 5 ? `${slot.start}:00` : (slot.start || '00:00:00')
-          const end = (slot.end || '').length === 5 ? `${slot.end}:00` : (slot.end || '00:00:00')
+          const start = (slot.start || '').length === 5 ? `${slot.start}:00` : slot.start || '00:00:00'
+          const end = (slot.end || '').length === 5 ? `${slot.end}:00` : slot.end || '00:00:00'
           flattened.push({
             id: `${ruleIndex}-${slotIndex}`,
             startTime: ` ${start}`.trim(),
@@ -537,7 +509,7 @@ const disabledTime = (current, type) => {
 
 const getLabStatusColor = (status) => {
   const colorMap = {
-    1: 'green',  // 正常
+    1: 'green', // 正常
     0: 'default' // 禁用
   }
   return colorMap[status] ?? 'default'
@@ -640,37 +612,41 @@ const handleSubmit = async () => {
   }
 
   if (formData.applicationType === 'equipment') {
+    if (!formData.labId) {
+      message.warning('请选择实验室')
+      return
+    }
+    if (!formData.equipmentId) {
+      message.warning('请选择设备')
+      return
+    }
     if (!formData.timeRange || formData.timeRange.length !== 2) {
       message.warning('请选择使用时间')
       return
     }
-  }
 
-  submitting.value = true
-  const startTime = formData.timeRange[0].format('YYYY-MM-DD HH:mm:ss')
-  const endTime = formData.timeRange[1].format('YYYY-MM-DD HH:mm:ss')
-  const purpose = formData.usageType === 'personal' ? '个人使用' : '课程使用'
+    submitting.value = true
+    const startTime = formData.timeRange[0].format('YYYY-MM-DD HH:mm:ss')
+    const endTime = formData.timeRange[1].format('YYYY-MM-DD HH:mm:ss')
+    const payload = {
+      equipmentId: formData.equipmentId,
+      laboratoryId: formData.labId,
+      quantity: formData.participantCount,
+      purpose: formData.purpose,
+      startTime,
+      endTime
+    }
 
-  const payload = {
-    laboratoryId: formData.labId,
-    purpose,
-    studentCount: formData.participantCount,
-    startTime,
-    endTime
+    submitEquipmentApplication(payload)
+      .then(() => {
+        message.success('申请提交成功！')
+        router.push('/')
+      })
+      .finally(() => {
+        submitting.value = false
+      })
+    return
   }
-  if (formData.usageType === 'course') {
-    payload.courseName = formData.courseName
-    payload.className = formData.className
-  }
-
-  submitLabApplication(payload)
-    .then(() => {
-      message.success('申请提交成功！')
-      router.push('/')
-    })
-    .finally(() => {
-      submitting.value = false
-    })
 }
 
 const handleReset = () => {

@@ -15,6 +15,12 @@
           <a-descriptions-item label="申请人">
             {{ selectedRecord.applicant }}
           </a-descriptions-item>
+          <a-descriptions-item v-if="selectedRecord.type === 'equipment'" label="设备">
+            {{ selectedRecord.equipmentName || selectedRecord.equipment?.equipmentName || selectedRecord.equipment?.name || '' }}
+          </a-descriptions-item>
+          <a-descriptions-item v-if="selectedRecord.type === 'equipment'" label="数量">
+            {{ selectedRecord.quantity }}
+          </a-descriptions-item>
           <a-descriptions-item label="申请时间">
             {{ selectedRecord.applyTime }}
           </a-descriptions-item>
@@ -23,16 +29,17 @@
               {{ getStatusText(selectedRecord.status) }}
             </a-tag>
           </a-descriptions-item>
-          <a-descriptions-item label="实验室"> {{ selectedRecord.labName }} ({{ selectedRecord.labLocation }})
-          </a-descriptions-item>
+          <a-descriptions-item label="实验室"> {{ selectedRecord.labName }} ({{ selectedRecord.location }}) </a-descriptions-item>
           <a-descriptions-item label="使用时间">
             {{ selectedRecord.timeRange }}
           </a-descriptions-item>
-          <a-descriptions-item label="预计人数"> {{ selectedRecord.participantCount }} 人 </a-descriptions-item>
+          <a-descriptions-item :label="selectedRecord.type === 'equipment' ? '借用数量' : '预计人数'">
+            {{ selectedRecord.type === 'equipment' ? `${selectedRecord.quantity || ''} 台` : `${selectedRecord.participantCount || ''} 人` }}
+          </a-descriptions-item>
           <a-descriptions-item label="使用目的" :span="2">
             {{ selectedRecord.purpose }}
           </a-descriptions-item>
-          <a-descriptions-item label="所需设备" :span="2">
+          <a-descriptions-item v-if="selectedRecord.type === 'lab'" label="所需设备" :span="2">
             {{ selectedRecord.requiredEquipment?.join(', ') || '无' }}
           </a-descriptions-item>
           <!-- 拒绝原因 -->

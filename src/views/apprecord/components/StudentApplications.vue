@@ -1,17 +1,20 @@
 <template>
   <div class="student-applications">
+    <a-tabs v-model:activeKey="activeTab" class="record-tabs" @change="handleTabChange">
+      <a-tab-pane key="lab" tab="实验室申请" />
+      <a-tab-pane key="equipment" tab="设备申请" />
+    </a-tabs>
+
     <div class="filter-card">
       <div class="filter-section">
         <div class="filter-left">
-          <a-select v-model:value="filterType" placeholder="申请类型筛选" allow-clear @change="handleFilterChange"
-            class="type-filter">
+          <a-select v-if="activeTab === 'lab'" v-model:value="filterType" placeholder="申请类型筛选" allow-clear @change="handleFilterChange" class="type-filter">
             <a-select-option value="all">全部</a-select-option>
             <a-select-option value="personal">个人使用</a-select-option>
             <a-select-option value="course">课程使用</a-select-option>
           </a-select>
 
-          <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter"
-            class="type-filter">
+          <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter" class="type-filter">
             <a-select-option value="0">待审核</a-select-option>
             <a-select-option value="1">已批准</a-select-option>
             <a-select-option value="2">已拒绝</a-select-option>
@@ -36,8 +39,7 @@
 
     <!-- 我的申请记录列表 -->
     <div class="record-list-card">
-      <a-table :columns="studentColumns" :data-source="filteredStudentRecords" :loading="loading" :scroll="{ x: 800 }"
-        :pagination="pagination" row-key="id" @change="handleTableChange" size="small">
+      <a-table :columns="columns" :data-source="filteredRecords" :loading="loading" :scroll="{ x: 800 }" :pagination="pagination" row-key="id" @change="handleTableChange" size="small">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
             <a-tag :color="getStatusColor(record.status)">
@@ -57,22 +59,19 @@
                     <EyeOutlined />
                     详情
                   </a-menu-item>
-                  <a-menu-item v-if="record.status === 'pending' || record.status === 'approved'" key="cancel"
-                    @click="handleCancel(record)">
+                  <a-menu-item v-if="record.status === 'pending' || record.status === 'approved'" key="cancel" @click="handleCancel(record)">
                     <CloseCircleOutlined />
                     撤销
                   </a-menu-item>
-                  <a-menu-item v-if="record.status === 'approved' || record.status === 'using'" key="complete"
-                    @click="handleComplete(record)">
+                  <a-menu-item v-if="record.status === 'approved' || record.status === 'using'" key="complete" @click="handleComplete(record)">
                     <CheckOutlined />
                     完成
                   </a-menu-item>
-                  <a-menu-item v-if="record.status === 'completed' || record.status === 'cancelled'" key="delete"
-                    @click="handleDelete(record)" danger>
+                  <a-menu-item v-if="record.status === 'completed' || record.status === 'cancelled'" key="delete" @click="handleDelete(record)" danger>
                     <DeleteOutlined />
                     删除
                   </a-menu-item>
-                  <a-menu-item key="repair" @click="handleRepair(record)">
+                  <a-menu-item v-if="activeTab === 'lab'" key="repair" @click="handleRepair(record)">
                     <ToolOutlined />
                     报修
                   </a-menu-item>
@@ -93,6 +92,7 @@ import { SearchOutlined, ReloadOutlined, ExportOutlined, DownOutlined, EyeOutlin
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { listMyApplications, cancelApplication, finishApplication, deleteApplication, getApplicationDetail } from '@/api/laboratoryRecord'
+import { listMyApplications as listMyEquipmentApplications, cancel as cancelEquipmentApplication, finish as finishEquipmentApplication, remove as deleteEquipmentApplication, getDetail as getEquipmentApplicationDetail } from '@/api/equipmentApplication'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -100,6 +100,7 @@ const emit = defineEmits(['view-detail'])
 
 // 响应式数据
 const loading = ref(false)
+const activeTab = ref('lab')
 const filterType = ref('all')
 const statusFilter = ref(undefined)
 
@@ -113,8 +114,8 @@ const pagination = reactive({
   showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
 })
 
-// 学生申请数据
-const studentRecords = ref([])
+// 申请数据
+const records = ref([])
 
 const statusCodeToTextKey = (status) => {
   if (typeof status === 'number') {
@@ -162,14 +163,46 @@ const mapApplicationRecord = (item) => {
   }
 }
 
-const loadStudentApplications = () => {
+const mapEquipmentRecord = (item) => {
+  const statusCode = statusCodeToTextKey(item.status)
+  const statusMap = {
+    0: 'pending',
+    1: 'approved',
+    2: 'rejected',
+    3: 'using',
+    4: 'completed',
+    5: 'cancelled'
+  }
+
+  const startTime = item.startTime || item.start_time
+  const endTime = item.endTime || item.end_time
+
+  return {
+    ...item,
+    type: 'equipment',
+    equipmentName: item.equipmentName || item.equipment_name || item.equipment?.equipmentName || item.equipment?.name || '',
+    quantity: item.quantity,
+    labName: item.labName || item.laboratoryName || item.laboratory?.labName || item.laboratory?.name || '',
+    labLocation: item.labLocation || item.laboratory?.location || '',
+    applyTime: item.applyTime || item.createTime,
+    timeRange: item.timeRange || (startTime && endTime ? `${startTime} - ${endTime}` : ''),
+    contactInfo: item.contactInfo || userStore.userInfo?.phone || userStore.userInfo?.email || '',
+    status: statusMap[statusCode] || item.status
+  }
+}
+
+const loadRecords = () => {
   loading.value = true
-  listMyApplications(pagination.current, pagination.pageSize)
+
+  const loader = activeTab.value === 'equipment' ? listMyEquipmentApplications(pagination.current, pagination.pageSize) : listMyApplications(pagination.current, pagination.pageSize)
+
+  loader
     .then((data) => {
       const list = data?.items ?? data?.records ?? data?.list ?? (Array.isArray(data) ? data : [])
       const total = data?.total ?? data?.totalCount ?? list.length
       pagination.total = total
-      studentRecords.value = list.map((item) => mapApplicationRecord(item))
+
+      records.value = activeTab.value === 'equipment' ? list.map((item) => mapEquipmentRecord(item)) : list.map((item) => mapApplicationRecord(item))
     })
     .catch(() => {
       message.error('加载申请记录失败')
@@ -180,11 +213,10 @@ const loadStudentApplications = () => {
 }
 
 onMounted(() => {
-  loadStudentApplications()
+  loadRecords()
 })
 
-// 表格列配置
-const studentColumns = [
+const labColumns = [
   {
     title: '实验室',
     dataIndex: 'labName',
@@ -213,16 +245,61 @@ const studentColumns = [
   }
 ]
 
-// 计算属性
-const filteredStudentRecords = computed(() => {
-  let result = studentRecords.value
+const equipmentColumns = [
+  {
+    title: '设备',
+    dataIndex: 'equipmentName',
+    key: 'equipmentName',
+    width: 140,
+    ellipsis: true
+  },
+  {
+    title: '数量',
+    dataIndex: 'quantity',
+    key: 'quantity',
+    width: 80
+  },
+  {
+    title: '实验室',
+    dataIndex: 'labName',
+    key: 'labName',
+    width: 120,
+    ellipsis: true
+  },
+  {
+    title: '使用时间',
+    dataIndex: 'timeRange',
+    key: 'timeRange',
+    width: 200,
+    ellipsis: true
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    width: 100
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    width: 50,
+    fixed: 'right'
+  }
+]
 
-  // 申请类型筛选
-  if (filterType.value !== 'all') {
-    result = result.filter((record) => record.applicationType === filterType.value)
+const columns = computed(() => {
+  return activeTab.value === 'equipment' ? equipmentColumns : labColumns
+})
+
+const filteredRecords = computed(() => {
+  let result = records.value
+
+  if (activeTab.value === 'lab') {
+    if (filterType.value !== 'all') {
+      result = result.filter((record) => record.applicationType === filterType.value)
+    }
   }
 
-  // 状态筛选（数据库状态 0-5）
   if (statusFilter.value !== undefined && statusFilter.value !== null && statusFilter.value !== '') {
     const targetStatus = Number(statusFilter.value)
     result = result.filter((record) => statusCodeToTextKey(record.status) === targetStatus)
@@ -270,7 +347,7 @@ const handleReset = () => {
   pagination.current = 1
   filterType.value = 'all'
   statusFilter.value = undefined
-  loadStudentApplications()
+  loadRecords()
 }
 
 const handleExport = () => {
@@ -280,14 +357,16 @@ const handleExport = () => {
 const handleTableChange = (pag) => {
   pagination.current = pag.current
   pagination.pageSize = pag.pageSize
-  loadStudentApplications()
+  loadRecords()
 }
 
 const viewDetail = (record) => {
   loading.value = true
-  getApplicationDetail(record.id)
+  const detailLoader = activeTab.value === 'equipment' ? getEquipmentApplicationDetail(record.id) : getApplicationDetail(record.id)
+
+  detailLoader
     .then((data) => {
-      const detail = mapApplicationRecord(data || record)
+      const detail = activeTab.value === 'equipment' ? mapEquipmentRecord(data || record) : mapApplicationRecord(data || record)
       emit('view-detail', detail)
     })
     .catch(() => {
@@ -301,7 +380,8 @@ const viewDetail = (record) => {
 
 const handleCancel = (record) => {
   loading.value = true
-  cancelApplication(record.id)
+  const canceler = activeTab.value === 'equipment' ? cancelEquipmentApplication : cancelApplication
+  canceler(record.id)
     .then(() => {
       record.status = 'cancelled'
       message.success('申请已撤销')
@@ -316,7 +396,8 @@ const handleCancel = (record) => {
 
 const handleComplete = (record) => {
   loading.value = true
-  finishApplication(record.id)
+  const finisher = activeTab.value === 'equipment' ? finishEquipmentApplication : finishApplication
+  finisher(record.id)
     .then(() => {
       record.status = 'completed'
       message.success('已标记为完成')
@@ -328,14 +409,22 @@ const handleComplete = (record) => {
 
 const handleDelete = (record) => {
   loading.value = true
-  deleteApplication(record.id)
+  const deleter = activeTab.value === 'equipment' ? deleteEquipmentApplication : deleteApplication
+  deleter(record.id)
     .then(() => {
-      studentRecords.value = studentRecords.value.filter((item) => item.id !== record.id)
+      records.value = records.value.filter((item) => item.id !== record.id)
       message.success('申请已删除')
     })
     .finally(() => {
       loading.value = false
     })
+}
+
+const handleTabChange = () => {
+  pagination.current = 1
+  filterType.value = 'all'
+  statusFilter.value = undefined
+  loadRecords()
 }
 
 const handleRepair = (record) => {
