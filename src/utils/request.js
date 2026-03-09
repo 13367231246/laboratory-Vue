@@ -97,28 +97,19 @@ export function setupResponseInterceptor(axiosInstance) {
 
       // 401：未授权，跳转登录页（与示例一致）
       if (error.response?.status === 401) {
-        console.log('用户未授权，清除登录状态')
+        message.error('用户未授权，清除登录状态')
         userStore.logout()
         router.push('/login')
       }
 
       // 403：权限不足
       if (error.response?.status === 403) {
-        console.log('用户权限不足')
-      }
-
-      // 处理后端返回的错误格式（带 code / message）
-      if (error.response?.data) {
-        const res = error.response.data
-        if (res.code !== undefined && res.message) {
-          error.message = res.message
-          error.code = res.code
-        }
+        message.error('用户权限不足')
       }
 
       // 处理网络错误
       if (!error.response) {
-        console.error('网络错误:', error.message)
+        message.error('网络错误')
       }
 
       // 统一错误提示（优先后端 message）
@@ -132,7 +123,6 @@ export function setupResponseInterceptor(axiosInstance) {
     }
   )
 }
-
 
 // 对当前 axios 实例启用拦截器
 setupRequestInterceptor(request)

@@ -116,8 +116,7 @@
                   </template>
                   <template #description>
                     <div class="activity-meta">
-                      <a-tag color="blue">公告</a-tag>
-                      <span class="activity-time">{{ item.createTime }}</span>
+                      <span class="activity-time">{{ formatNoticeTime(item.publishTime || item.createTime) }}</span>
                     </div>
                   </template>
                 </a-list-item-meta>
@@ -136,6 +135,7 @@ import { useLabStore } from '@/stores/lab'
 import { useRepairStore } from '@/stores/repair'
 import { useApplicationStore } from '@/stores/application'
 import { useUserStore } from '@/stores/user'
+import { listByPublished } from '@/api/document'
 
 const router = useRouter()
 const labStore = useLabStore()
@@ -201,34 +201,8 @@ const recentApplications = computed(() => {
   }))
 })
 
-// 系统公告数据
-const notices = ref([
-  {
-    id: 1,
-    title: '实验室使用规范更新通知',
-    createTime: '2024-01-15 09:00'
-  },
-  {
-    id: 2,
-    title: '新设备使用培训安排',
-    createTime: '2024-01-14 15:30'
-  },
-  {
-    id: 3,
-    title: '寒假期间实验室开放时间调整',
-    createTime: '2024-01-13 11:20'
-  },
-  {
-    id: 4,
-    title: '实验室安全使用规范',
-    createTime: '2024-01-12 10:15'
-  },
-  {
-    id: 5,
-    title: '新学期实验室开放时间调整',
-    createTime: '2024-01-11 15:45'
-  }
-])
+// 系统公告数据（由接口获取）
+const notices = ref([])
 
 // 事件处理
 const goToApplication = () => {
@@ -295,15 +269,26 @@ onMounted(() => {
 
 const loadData = async () => {
   loading.value = true
-  try {
-    // 模拟API调用
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    // 数据已经在store中，这里可以添加其他数据加载逻辑
-  } catch (error) {
-    console.error('加载数据失败:', error)
-  } finally {
-    loading.value = false
-  }
+  listByPublished(1, 10)
+    .then((data) => {
+      const list = data?.items ?? data?.records ?? data?.list ?? []
+      notices.value = list
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
+const formatNoticeTime = (val) => {
+  if (!val) return ''
+  const s = String(val)
+  if (s.length >= 16) return s.slice(0, 16).replace('T', ' ')
+  return s
+}
+
+const getNoticeTypeColor = (type) => {
+  const map = { system: 'blue', lab: 'green', academic: 'purple', other: 'default' }
+  return map[type] || 'default'
 }
 </script>
 

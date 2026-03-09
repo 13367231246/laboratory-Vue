@@ -3,31 +3,28 @@
     <div class="filter-card">
       <div class="filter-section">
         <div class="filter-left">
-          <a-select v-model:value="filterType" placeholder="申请类型筛选" allow-clear @change="handleFilterChange" class="type-filter">
+          <a-select v-model:value="filterType" placeholder="申请类型筛选" allow-clear @change="handleFilterChange"
+            class="type-filter">
             <a-select-option value="all">全部</a-select-option>
             <a-select-option value="personal">个人使用</a-select-option>
             <a-select-option value="course">课程使用</a-select-option>
           </a-select>
 
-          <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter" class="type-filter">
-            <a-select-option value="pending">待审核</a-select-option>
-            <a-select-option value="approved">已通过</a-select-option>
-            <a-select-option value="rejected">已拒绝</a-select-option>
-            <a-select-option value="using">使用中</a-select-option>
-            <a-select-option value="completed">已完成</a-select-option>
+          <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter"
+            class="type-filter">
+            <a-select-option value="0">待审核</a-select-option>
+            <a-select-option value="1">已批准</a-select-option>
+            <a-select-option value="2">已拒绝</a-select-option>
+            <a-select-option value="3">使用中</a-select-option>
+            <a-select-option value="4">已完成</a-select-option>
+            <a-select-option value="5">已取消</a-select-option>
           </a-select>
-
-          <a-input v-model:value="searchText" placeholder="搜索申请人或内容" allow-clear class="search-input">
-            <template #prefix>
-              <SearchOutlined />
-            </template>
-          </a-input>
         </div>
 
         <div class="filter-right">
-          <a-button @click="handleRefresh" :loading="loading">
+          <a-button @click="handleReset" :loading="loading">
             <ReloadOutlined />
-            刷新
+            重置
           </a-button>
           <a-button type="primary" @click="handleExport">
             <ExportOutlined />
@@ -39,7 +36,8 @@
 
     <!-- 我的申请记录列表 -->
     <div class="record-list-card">
-      <a-table :columns="studentColumns" :data-source="filteredStudentRecords" :loading="loading" :scroll="{ x: 800 }" :pagination="pagination" row-key="id" @change="handleTableChange" size="small">
+      <a-table :columns="studentColumns" :data-source="filteredStudentRecords" :loading="loading" :scroll="{ x: 800 }"
+        :pagination="pagination" row-key="id" @change="handleTableChange" size="small">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
             <a-tag :color="getStatusColor(record.status)">
@@ -59,9 +57,20 @@
                     <EyeOutlined />
                     详情
                   </a-menu-item>
-                  <a-menu-item v-if="record.status === 'using'" key="complete" @click="handleComplete(record)">
+                  <a-menu-item v-if="record.status === 'pending' || record.status === 'approved'" key="cancel"
+                    @click="handleCancel(record)">
+                    <CloseCircleOutlined />
+                    撤销
+                  </a-menu-item>
+                  <a-menu-item v-if="record.status === 'approved' || record.status === 'using'" key="complete"
+                    @click="handleComplete(record)">
                     <CheckOutlined />
                     完成
+                  </a-menu-item>
+                  <a-menu-item v-if="record.status === 'completed' || record.status === 'cancelled'" key="delete"
+                    @click="handleDelete(record)" danger>
+                    <DeleteOutlined />
+                    删除
                   </a-menu-item>
                   <a-menu-item key="repair" @click="handleRepair(record)">
                     <ToolOutlined />
@@ -78,11 +87,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { SearchOutlined, ReloadOutlined, ExportOutlined, DownOutlined, EyeOutlined, CheckOutlined, ToolOutlined } from '@ant-design/icons-vue'
+import { SearchOutlined, ReloadOutlined, ExportOutlined, DownOutlined, EyeOutlined, CheckOutlined, ToolOutlined, CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { listMyApplications, cancelApplication, finishApplication, deleteApplication, getApplicationDetail } from '@/api/laboratoryRecord'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -92,7 +102,6 @@ const emit = defineEmits(['view-detail'])
 const loading = ref(false)
 const filterType = ref('all')
 const statusFilter = ref(undefined)
-const searchText = ref('')
 
 // 分页配置
 const pagination = reactive({
@@ -104,47 +113,75 @@ const pagination = reactive({
   showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
 })
 
-// 模拟学生申请数据 - 只显示当前学生的申请
-const studentRecords = ref([
-  {
-    id: 1,
-    type: 'lab',
-    applicationType: 'course',
-    applicant: userStore.userInfo?.name || '当前学生',
-    phone: '13800138001',
-    labId: 1,
-    labName: '计算机实验室A',
-    labLocation: '教学楼A座201',
-    applyTime: '2024-01-15 09:30',
-    timeRange: '2024-01-16 08:00 - 2024-01-16 10:00',
-    participantCount: 25,
-    purpose: 'Java编程课程教学',
-    requiredEquipment: ['台式电脑', '投影仪'],
-    specialRequirements: '需要网络连接',
-    contactInfo: '13800138001',
-    status: 'using',
-    remark: '课程教学需要'
-  },
-  {
-    id: 2,
-    type: 'lab',
-    applicationType: 'personal',
-    applicant: userStore.userInfo?.name || '当前学生',
-    phone: '13800138002',
-    labId: 2,
-    labName: '物理实验室B',
-    labLocation: '实验楼B座301',
-    applyTime: '2024-01-15 14:20',
-    timeRange: '2024-01-17 14:00 - 2024-01-17 16:00',
-    participantCount: 5,
-    purpose: '个人研究项目',
-    requiredEquipment: ['实验台', '测量仪器'],
-    specialRequirements: '需要安静环境',
-    contactInfo: 'lisi@email.com',
-    status: 'completed',
-    remark: '研究项目需要'
+// 学生申请数据
+const studentRecords = ref([])
+
+const statusCodeToTextKey = (status) => {
+  if (typeof status === 'number') {
+    return status
   }
-])
+  const parsed = parseInt(status, 10)
+  if (!Number.isNaN(parsed)) {
+    return parsed
+  }
+  const map = {
+    pending: 0,
+    approved: 1,
+    rejected: 2,
+    using: 3,
+    completed: 4,
+    cancelled: 5
+  }
+  return map[status] ?? status
+}
+
+const mapApplicationRecord = (item) => {
+  const statusCode = statusCodeToTextKey(item.status)
+  const statusMap = {
+    0: 'pending',
+    1: 'approved',
+    2: 'rejected',
+    3: 'using',
+    4: 'completed',
+    5: 'cancelled'
+  }
+  const startTime = item.startTime || item.start_time
+  const endTime = item.endTime || item.end_time
+
+  return {
+    ...item,
+    type: 'lab',
+    applicationType: item.applicationType || (item.purpose === '课程使用' || item.courseName ? 'course' : 'personal'),
+    labName: item.labName || item.laboratoryName || item.laboratory?.labName || '',
+    labLocation: item.labLocation || item.laboratory?.location || '',
+    applyTime: item.applyTime || item.createTime,
+    timeRange: item.timeRange || (startTime && endTime ? `${startTime} - ${endTime}` : ''),
+    participantCount: item.participantCount ?? item.studentCount,
+    contactInfo: item.contactInfo || userStore.userInfo?.phone || userStore.userInfo?.email || '',
+    status: statusMap[statusCode] || item.status
+  }
+}
+
+const loadStudentApplications = () => {
+  loading.value = true
+  listMyApplications(pagination.current, pagination.pageSize)
+    .then((data) => {
+      const list = data?.items ?? data?.records ?? data?.list ?? (Array.isArray(data) ? data : [])
+      const total = data?.total ?? data?.totalCount ?? list.length
+      pagination.total = total
+      studentRecords.value = list.map((item) => mapApplicationRecord(item))
+    })
+    .catch(() => {
+      message.error('加载申请记录失败')
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
+onMounted(() => {
+  loadStudentApplications()
+})
 
 // 表格列配置
 const studentColumns = [
@@ -185,15 +222,10 @@ const filteredStudentRecords = computed(() => {
     result = result.filter((record) => record.applicationType === filterType.value)
   }
 
-  // 状态筛选
-  if (statusFilter.value) {
-    result = result.filter((record) => record.status === statusFilter.value)
-  }
-
-  // 搜索筛选
-  if (searchText.value) {
-    const searchLower = searchText.value.toLowerCase()
-    result = result.filter((record) => record.applicant.toLowerCase().includes(searchLower) || record.purpose.toLowerCase().includes(searchLower) || record.labName.toLowerCase().includes(searchLower))
+  // 状态筛选（数据库状态 0-5）
+  if (statusFilter.value !== undefined && statusFilter.value !== null && statusFilter.value !== '') {
+    const targetStatus = Number(statusFilter.value)
+    result = result.filter((record) => statusCodeToTextKey(record.status) === targetStatus)
   }
 
   return result
@@ -201,25 +233,29 @@ const filteredStudentRecords = computed(() => {
 
 // 方法
 const getStatusColor = (status) => {
+  const key = statusCodeToTextKey(status)
   const colorMap = {
-    pending: 'orange',
-    approved: 'green',
-    rejected: 'red',
-    using: 'blue',
-    completed: 'green'
+    0: 'orange',
+    1: 'green',
+    2: 'red',
+    3: 'blue',
+    4: 'green',
+    5: 'default'
   }
-  return colorMap[status] || 'default'
+  return colorMap[key] || 'default'
 }
 
 const getStatusText = (status) => {
+  const key = statusCodeToTextKey(status)
   const textMap = {
-    pending: '待审核',
-    approved: '已通过',
-    rejected: '已拒绝',
-    using: '使用中',
-    completed: '已完成'
+    0: '待审核',
+    1: '已批准',
+    2: '已拒绝',
+    3: '使用中',
+    4: '已完成',
+    5: '已取消'
   }
-  return textMap[status] || '未知'
+  return textMap[key] || '未知'
 }
 
 const handleFilterChange = () => {
@@ -230,45 +266,76 @@ const handleFilter = () => {
   pagination.current = 1
 }
 
-const handleRefresh = async () => {
-  loading.value = true
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    message.success('数据刷新成功')
-  } catch (error) {
-    message.error('数据刷新失败')
-  } finally {
-    loading.value = false
-  }
+const handleReset = () => {
+  pagination.current = 1
+  filterType.value = 'all'
+  statusFilter.value = undefined
+  loadStudentApplications()
 }
 
 const handleExport = () => {
   message.info('导出功能开发中...')
 }
 
-const handleTableChange = (pag, filters, sorter) => {
+const handleTableChange = (pag) => {
   pagination.current = pag.current
   pagination.pageSize = pag.pageSize
+  loadStudentApplications()
 }
 
 const viewDetail = (record) => {
-  emit('view-detail', record)
+  loading.value = true
+  getApplicationDetail(record.id)
+    .then((data) => {
+      const detail = mapApplicationRecord(data || record)
+      emit('view-detail', detail)
+    })
+    .catch(() => {
+      message.error('获取申请详情失败，已展示本地数据')
+      emit('view-detail', record)
+    })
+    .finally(() => {
+      loading.value = false
+    })
 }
 
-const handleComplete = async (record) => {
-  try {
-    loading.value = true
-    // 模拟API调用
-    await new Promise((resolve) => setTimeout(resolve, 500))
+const handleCancel = (record) => {
+  loading.value = true
+  cancelApplication(record.id)
+    .then(() => {
+      record.status = 'cancelled'
+      message.success('申请已撤销')
+    })
+    .catch(() => {
+      message.error('撤销失败')
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
 
-    // 更新记录状态
-    record.status = 'completed'
-    message.success('使用完成')
-  } catch (error) {
-    message.error('操作失败')
-  } finally {
-    loading.value = false
-  }
+const handleComplete = (record) => {
+  loading.value = true
+  finishApplication(record.id)
+    .then(() => {
+      record.status = 'completed'
+      message.success('已标记为完成')
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
+const handleDelete = (record) => {
+  loading.value = true
+  deleteApplication(record.id)
+    .then(() => {
+      studentRecords.value = studentRecords.value.filter((item) => item.id !== record.id)
+      message.success('申请已删除')
+    })
+    .finally(() => {
+      loading.value = false
+    })
 }
 
 const handleRepair = (record) => {
@@ -291,6 +358,7 @@ const handleRepair = (record) => {
   margin-bottom: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
   @media (max-width: 768px) {
     padding: 0px;
     box-shadow: none;
@@ -330,6 +398,7 @@ const handleRepair = (record) => {
   padding: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
   @media (max-width: 768px) {
     padding: 0px;
     box-shadow: none;

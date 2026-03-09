@@ -86,6 +86,16 @@ const router = createRouter({
           path: 'message',
           name: 'message',
           component: () => import('@/views/message/index.vue')
+        },
+        {
+          path: 'notice-detail/:id',
+          name: 'notice-detail',
+          component: () => import('@/views/notice-detail/index.vue')
+        },
+        {
+          path: 'document-detail/:id',
+          name: 'document-detail',
+          component: () => import('@/views/document-detail/index.vue')
         }
       ]
     }

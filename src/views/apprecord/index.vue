@@ -1,17 +1,7 @@
 <template>
   <div class="application-record-page">
-    <!-- 老师视图 -->
-    <a-tabs v-model:activeKey="activeTab" class="role-tabs" v-if="isTeacher">
-      <a-tab-pane key="applications" tab="处理申请">
-        <ApplicationHandling @view-detail="viewDetail" />
-      </a-tab-pane>
-      <a-tab-pane key="usage" tab="使用记录">
-        <UsageRecords @view-detail="viewDetail" />
-      </a-tab-pane>
-    </a-tabs>
-
-    <!-- 学生视图 -->
-    <StudentApplications v-else @view-detail="viewDetail" />
+    <!-- 老师 / 学生共用的申请记录列表 -->
+    <StudentApplications @view-detail="viewDetail" />
 
     <!-- 详情模态框 -->
     <a-modal v-model:open="detailModalVisible" title="申请详情" width="800px" :footer="null">
@@ -20,9 +10,6 @@
           <a-descriptions-item label="申请类型">
             <a-tag :color="getTypeColor(selectedRecord.type)">
               {{ getTypeText(selectedRecord.type) }}
-            </a-tag>
-            <a-tag :color="getApplicationTypeColor(selectedRecord.applicationType)" style="margin-left: 8px">
-              {{ getApplicationTypeText(selectedRecord.applicationType) }}
             </a-tag>
           </a-descriptions-item>
           <a-descriptions-item label="申请人">
@@ -36,7 +23,8 @@
               {{ getStatusText(selectedRecord.status) }}
             </a-tag>
           </a-descriptions-item>
-          <a-descriptions-item label="实验室"> {{ selectedRecord.labName }} ({{ selectedRecord.labLocation }}) </a-descriptions-item>
+          <a-descriptions-item label="实验室"> {{ selectedRecord.labName }} ({{ selectedRecord.labLocation }})
+          </a-descriptions-item>
           <a-descriptions-item label="使用时间">
             {{ selectedRecord.timeRange }}
           </a-descriptions-item>
@@ -46,6 +34,10 @@
           </a-descriptions-item>
           <a-descriptions-item label="所需设备" :span="2">
             {{ selectedRecord.requiredEquipment?.join(', ') || '无' }}
+          </a-descriptions-item>
+          <!-- 拒绝原因 -->
+          <a-descriptions-item v-if="selectedRecord.reviewComment" label="拒绝原因" :span="2">
+            {{ selectedRecord.reviewComment }}
           </a-descriptions-item>
           <a-descriptions-item v-if="selectedRecord.specialRequirements" label="特殊要求" :span="2">
             {{ selectedRecord.specialRequirements }}
@@ -63,21 +55,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useUserStore } from '@/stores/user'
-import ApplicationHandling from './components/ApplicationHandling.vue'
-import UsageRecords from './components/UsageRecords.vue'
+import { ref } from 'vue'
 import StudentApplications from './components/StudentApplications.vue'
 
-const userStore = useUserStore()
-
 // 响应式数据
-const activeTab = ref('applications')
 const detailModalVisible = ref(false)
 const selectedRecord = ref(null)
-
-// 计算属性
-const isTeacher = computed(() => userStore.isTeacher)
 
 // 方法
 const getTypeColor = (type) => {
@@ -95,30 +78,14 @@ const getTypeText = (type) => {
   }
   return textMap[type] || '未知'
 }
-
-const getApplicationTypeColor = (applicationType) => {
-  const colorMap = {
-    personal: 'blue',
-    course: 'green'
-  }
-  return colorMap[applicationType] || 'default'
-}
-
-const getApplicationTypeText = (applicationType) => {
-  const textMap = {
-    personal: '个人使用',
-    course: '课程使用'
-  }
-  return textMap[applicationType] || '未知'
-}
-
 const getStatusColor = (status) => {
   const colorMap = {
     pending: 'orange',
     approved: 'green',
     rejected: 'red',
     using: 'blue',
-    completed: 'green'
+    completed: 'green',
+    cancelled: 'default'
   }
   return colorMap[status] || 'default'
 }
@@ -129,7 +96,8 @@ const getStatusText = (status) => {
     approved: '已通过',
     rejected: '已拒绝',
     using: '使用中',
-    completed: '已完成'
+    completed: '已完成',
+    cancelled: '已取消'
   }
   return textMap[status] || '未知'
 }
