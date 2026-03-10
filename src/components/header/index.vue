@@ -70,7 +70,7 @@
 <script setup>
 import { ref, computed, onMounted, h } from 'vue'
 import { useRouter } from 'vue-router'
-import { BellOutlined, DownOutlined, UserOutlined, SettingOutlined, LogoutOutlined, HomeOutlined, ExperimentOutlined, ToolOutlined, FileTextOutlined, TeamOutlined, MenuOutlined, CloseOutlined } from '@ant-design/icons-vue'
+import { BellOutlined, DownOutlined, UserOutlined, SettingOutlined, LogoutOutlined, HomeOutlined, ExperimentOutlined, ToolOutlined, FileTextOutlined, TeamOutlined, MenuOutlined, CloseOutlined, HistoryOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
 
@@ -109,6 +109,11 @@ const menuItems = computed(() => {
         label: '申请记录'
       },
       {
+        key: 'repair-progress',
+        icon: () => h(HistoryOutlined),
+        label: '报修进度'
+      },
+      {
         key: 'repair-handling',
         icon: () => h(ToolOutlined),
         label: '维修处理'
@@ -125,6 +130,11 @@ const menuItems = computed(() => {
         key: 'application-record',
         icon: () => h(FileTextOutlined),
         label: '申请记录'
+      },
+      {
+        key: 'repair-progress',
+        icon: () => h(HistoryOutlined),
+        label: '报修进度'
       }
     )
   }
@@ -155,6 +165,11 @@ const mobileMenuItems = computed(() => {
         label: '申请记录'
       },
       {
+        key: 'repair-progress',
+        icon: () => h(HistoryOutlined),
+        label: '报修进度'
+      },
+      {
         key: 'repair-handling',
         icon: () => h(ToolOutlined),
         label: '维修处理'
@@ -171,6 +186,11 @@ const mobileMenuItems = computed(() => {
         key: 'application-record',
         icon: () => h(FileTextOutlined),
         label: '申请记录'
+      },
+      {
+        key: 'repair-progress',
+        icon: () => h(HistoryOutlined),
+        label: '报修进度'
       }
     )
   }
@@ -185,6 +205,7 @@ const handleMenuClick = ({ key }) => {
     home: '/',
     'lab-application': '/lab-application',
     'application-record': '/application-record',
+    'repair-progress': '/repair-progress',
     'repair-handling': '/repair-handling',
     message: '/message'
   }

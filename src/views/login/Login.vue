@@ -17,7 +17,8 @@
           </a-form-item>
 
           <a-form-item name="password">
-            <a-input-password v-model:value="formData.password" size="large" placeholder="密码" :prefix="h(LockOutlined)" />
+            <a-input-password v-model:value="formData.password" size="large" placeholder="密码"
+              :prefix="h(LockOutlined)" />
           </a-form-item>
 
           <a-form-item name="userType">
@@ -25,13 +26,6 @@
               <a-radio-button value="teacher">教师</a-radio-button>
               <a-radio-button value="student">学生</a-radio-button>
             </a-radio-group>
-          </a-form-item>
-
-          <a-form-item>
-            <div class="login-options">
-              <a-checkbox v-model:checked="formData.rememberMe"> 记住我 </a-checkbox>
-              <a class="forgot-password" @click="goToForgotPassword"> 忘记密码？ </a>
-            </div>
           </a-form-item>
 
           <a-form-item>

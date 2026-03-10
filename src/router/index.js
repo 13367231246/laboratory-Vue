@@ -73,6 +73,11 @@ const router = createRouter({
           component: () => import('@/views/repair/RepairReport/index.vue')
         },
         {
+          path: 'repair-progress',
+          name: 'repair-progress',
+          component: () => import('@/views/repair-progress/index.vue')
+        },
+        {
           path: 'profile',
           name: 'profile',
           component: () => import('@/views/userInfo/index.vue')

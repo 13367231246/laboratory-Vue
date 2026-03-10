@@ -130,7 +130,7 @@
 </template>
 
 <script setup>
-import { ExperimentOutlined, ClockCircleOutlined, ToolOutlined, FileTextOutlined, SettingOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons-vue'
+import { ExperimentOutlined, ClockCircleOutlined, ToolOutlined, FileTextOutlined, SettingOutlined, TeamOutlined, UserOutlined, HistoryOutlined } from '@ant-design/icons-vue'
 import { useLabStore } from '@/stores/lab'
 import { useRepairStore } from '@/stores/repair'
 import { useUserStore } from '@/stores/user'
@@ -175,7 +175,7 @@ const quickActions = computed(() => {
       title: '设备报修',
       description: '报告设备故障',
       icon: ToolOutlined
-    }
+    },
   ]
 
   // 根据用户角色添加特定操作
@@ -316,11 +316,6 @@ const formatNoticeTime = (val) => {
   const s = String(val)
   if (s.length >= 16) return s.slice(0, 16).replace('T', ' ')
   return s
-}
-
-const getNoticeTypeColor = (type) => {
-  const map = { system: 'blue', lab: 'green', academic: 'purple', other: 'default' }
-  return map[type] || 'default'
 }
 </script>
 

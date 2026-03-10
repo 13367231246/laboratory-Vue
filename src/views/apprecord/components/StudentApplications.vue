@@ -8,13 +8,15 @@
     <div class="filter-card">
       <div class="filter-section">
         <div class="filter-left">
-          <a-select v-if="activeTab === 'lab'" v-model:value="filterType" placeholder="申请类型筛选" allow-clear @change="handleFilterChange" class="type-filter">
+          <a-select v-if="activeTab === 'lab'" v-model:value="filterType" placeholder="申请类型筛选" allow-clear
+            @change="handleFilterChange" class="type-filter">
             <a-select-option value="all">全部</a-select-option>
             <a-select-option value="personal">个人使用</a-select-option>
             <a-select-option value="course">课程使用</a-select-option>
           </a-select>
 
-          <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter" class="type-filter">
+          <a-select v-model:value="statusFilter" placeholder="状态筛选" allow-clear @change="handleFilter"
+            class="type-filter">
             <a-select-option value="0">待审核</a-select-option>
             <a-select-option value="1">已批准</a-select-option>
             <a-select-option value="2">已拒绝</a-select-option>
@@ -29,17 +31,15 @@
             <ReloadOutlined />
             重置
           </a-button>
-          <a-button type="primary" @click="handleExport">
-            <ExportOutlined />
-            导出
-          </a-button>
+
         </div>
       </div>
     </div>
 
     <!-- 我的申请记录列表 -->
     <div class="record-list-card">
-      <a-table :columns="columns" :data-source="filteredRecords" :loading="loading" :scroll="{ x: 800 }" :pagination="pagination" row-key="id" @change="handleTableChange" size="small">
+      <a-table :columns="columns" :data-source="filteredRecords" :loading="loading" :scroll="{ x: 800 }"
+        :pagination="pagination" row-key="id" @change="handleTableChange" size="small">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
             <a-tag :color="getStatusColor(record.status)">
@@ -59,19 +59,24 @@
                     <EyeOutlined />
                     详情
                   </a-menu-item>
-                  <a-menu-item v-if="record.status === 'pending' || record.status === 'approved'" key="cancel" @click="handleCancel(record)">
+                  <a-menu-item v-if="record.status === 'pending' || record.status === 'approved'" key="cancel"
+                    @click="handleCancel(record)">
                     <CloseCircleOutlined />
                     撤销
                   </a-menu-item>
-                  <a-menu-item v-if="record.status === 'approved' || record.status === 'using'" key="complete" @click="handleComplete(record)">
+                  <a-menu-item v-if="record.status === 'approved' || record.status === 'using'" key="complete"
+                    @click="handleComplete(record)">
                     <CheckOutlined />
                     完成
                   </a-menu-item>
-                  <a-menu-item v-if="activeTab === 'lab' && (record.status === 'completed' || record.status === 'using')" key="repair" @click="handleRepair(record)">
+                  <a-menu-item
+                    v-if="activeTab === 'lab' && (record.status === 'completed' || record.status === 'using')"
+                    key="repair" @click="handleRepair(record)">
                     <ToolOutlined />
                     报修
                   </a-menu-item>
-                  <a-menu-item v-if="record.status === 'completed' || record.status === 'cancelled'" key="delete" @click="handleDelete(record)" danger>
+                  <a-menu-item v-if="record.status === 'completed' || record.status === 'cancelled'" key="delete"
+                    @click="handleDelete(record)" danger>
                     <DeleteOutlined />
                     删除
                   </a-menu-item>
@@ -352,9 +357,6 @@ const handleReset = () => {
   loadRecords()
 }
 
-const handleExport = () => {
-  message.info('导出功能开发中...')
-}
 
 const handleTableChange = (pag) => {
   pagination.current = pag.current

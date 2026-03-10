@@ -46,3 +46,40 @@ export const summaryForTeacher = () => {
 export const markNoNeedAsTeacher = (id) => {
   return request.patch(`/maintenance/teacher/${id}/no-need`)
 }
+
+/**
+ * 获取今日维护申请（限制5条）
+ */
+export const listTodayApplications = () => {
+  return request.get('/maintenance/today')
+}
+
+/**
+ * 用户：获取我的报修任务详情
+ */
+export const getMyMaintenanceDetail = (id) => {
+  return request.get(`/maintenance/my/${id}`)
+}
+
+/**
+ * 用户：删除我的报修任务（仅待审核状态可删除）
+ */
+export const deleteMyMaintenance = (id) => {
+  return request.delete(`/maintenance/my/${id}`)
+}
+
+/**
+ * 用户：获取我的报修进度统计
+ */
+export const getMyMaintenanceProgress = () => {
+  return request.get('/maintenance/my/progress')
+}
+
+/**
+ * 用户：获取我的报修列表
+ */
+export const getMyRepairList = (pageNo, pageSize) => {
+  return request.get('/maintenance/my', {
+    params: { pageNo, pageSize }
+  })
+}

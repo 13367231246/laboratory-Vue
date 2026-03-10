@@ -36,3 +36,10 @@ export const getDetail = (id) => {
 export const listTodayApplications = () => {
   return request.get('/maintenance/today')
 }
+
+/**
+ * 获取我的统计信息（申请次数、报修次数、维修数、使用实验室数）
+ */
+export const getMyStatistics = () => {
+  return request.get('/lab-application/my/statistics')
+}
