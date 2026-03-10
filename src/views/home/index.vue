@@ -176,26 +176,22 @@ const quickActions = computed(() => {
       description: '报告设备故障',
       icon: ToolOutlined
     },
-  ]
-
-  // 根据用户角色添加特定操作
-  if (userStore.isTeacher) {
-    baseActions.unshift({
+    {
+      key: 'repair-progress',
+      title: '报修进度',
+      description: '查看报修进度',
+      icon: HistoryOutlined
+    },
+    {
       key: 'application-record',
       title: '申请记录',
       description: '查看申请记录',
       icon: FileTextOutlined
-    })
-    baseActions.unshift({
-      key: 'repair-handling',
-      title: '维修处理',
-      description: '处理维修申请',
-      icon: ToolOutlined
-    })
-  }
+    }
+  ]
 
   if (!userStore.isLoggedIn) {
-    return baseActions.filter((item) => item.key !== 'application-record')
+    return baseActions.filter((item) => item.key !== 'application-record' && item.key !== 'repair-progress')
   }
 
   return baseActions
@@ -234,6 +230,7 @@ const handleQuickAction = (key) => {
     'repair-handling': '/repair-handling',
     'apply-lab': '/lab-application',
     'repair-report': '/repair-report',
+    'repair-progress': '/repair-progress',
     'application-record': '/application-record',
     'personal-settings': '/setting',
     'lab-search': '/lab-search',
