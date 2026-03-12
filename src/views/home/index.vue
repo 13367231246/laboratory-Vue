@@ -83,14 +83,14 @@
 
     <!-- 最近活动 -->
     <a-row :gutter="24" class="recent-activities-section">
-      <a-col v-if="userStore.isLoggedIn" :xs="24" :lg="12">
-        <a-card title="最近申请" class="activities-card">
+      <a-col :xs="24" :lg="12">
+        <a-card title="实验室申请" class="activities-card">
           <a-list :data-source="recentApplications" :loading="loading">
             <template #renderItem="{ item }">
               <a-list-item>
                 <a-list-item-meta>
                   <template #title>
-                    <a @click="viewApplication(item.id)">{{ item.labName }}</a>
+                    <a>{{ item.labName }}</a>
                   </template>
                   <template #description>
                     <div class="activity-meta">
@@ -197,19 +197,18 @@ const quickActions = computed(() => {
   return baseActions
 })
 
-// 今日维护申请数据
-const todayApplications = ref([])
+// 今日实验室申请数据
+const todayLabApplications = ref([])
 
-// 最近申请数据（今日维护申请）
+// 最近申请数据（今日实验室申请）
 const recentApplications = computed(() => {
-  return todayApplications.value.map((item) => ({
+  return todayLabApplications.value.map((item) => ({
     id: item.id,
     labName: item.labName || item.laboratory?.labName || '',
-    applicant: item.reporter || item.applicant || '',
-    status: item.status === 0 ? 'pending' : item.status === 1 ? 'repairing' : 'completed',
-    createTime: item.reportTime || item.createTime || '',
-    description: item.description || '',
-    equipmentName: item.equipmentName || item.equipment?.equipmentName || ''
+    applicant: item.applicant || '',
+    status: mapLabApplicationStatus(item.status),
+    createTime: item.createTime || '',
+    purpose: item.purpose || ''
   }))
 })
 
@@ -242,10 +241,6 @@ const handleQuickAction = (key) => {
   }
 }
 
-const viewApplication = (id) => {
-  router.push(`/application-detail/${id}`)
-}
-
 const viewNotice = (id) => {
   router.push(`/notice-detail/${id}`)
 }
@@ -274,6 +269,19 @@ const getStatusText = (status) => {
   return textMap[status] || '未知状态'
 }
 
+const mapLabApplicationStatus = (status) => {
+  // Map numeric status to text status
+  const statusMap = {
+    0: 'pending', // 待审核
+    1: 'approved', // 已通过
+    2: 'rejected', // 已拒绝
+    3: 'in_use', // 使用中
+    4: 'completed', // 已完成
+    5: 'cancelled' // 已取消
+  }
+  return statusMap[status] || 'pending'
+}
+
 // 生命周期
 onMounted(() => {
   // 加载数据
@@ -285,16 +293,16 @@ const loadData = async () => {
 
   // 并行加载数据
   Promise.all([getLaboratorySummary(), listTodayApplications(), listByPublished(1, 10)])
-    .then(([labSummary, maintenanceData, noticeData]) => {
+    .then(([labSummary, labApplicationData, noticeData]) => {
       // 实验室汇总数据
       summary.value.availableLabs = labSummary?.availableLabs ?? 0
       summary.value.inUseLabs = labSummary?.inUseLabs ?? 0
       summary.value.pendingMaintenanceEquipment = labSummary?.pendingMaintenanceEquipment ?? 0
       summary.value.todayApplications = labSummary?.todayApplications ?? 0
 
-      // 今日维护申请数据
-      const maintenanceList = maintenanceData?.items ?? maintenanceData?.records ?? maintenanceData?.list ?? (Array.isArray(maintenanceData) ? maintenanceData : [])
-      todayApplications.value = maintenanceList.slice(0, 5)
+      // 今日实验室申请数据
+      const labApplicationList = labApplicationData?.items ?? labApplicationData?.records ?? labApplicationData?.list ?? (Array.isArray(labApplicationData) ? labApplicationData : [])
+      todayLabApplications.value = labApplicationList.slice(0, 5)
 
       // 系统公告数据
       const noticeList = noticeData?.items ?? noticeData?.records ?? noticeData?.list ?? []

@@ -74,8 +74,12 @@ const selectedEquipment = computed(() => {
 })
 
 const quantityMax = computed(() => {
-  const qty = selectedEquipment.value?.quantity
-  return qty != null ? qty : 10
+  const equipment = selectedEquipment.value
+  if (!equipment) return 1
+
+  // Check multiple possible field names for quantity
+  const count = equipment.count ?? equipment.quantity ?? equipment.availableCount ?? equipment.stock
+  return count != null && count > 0 ? count : 1
 })
 </script>
 

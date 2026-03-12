@@ -29,10 +29,8 @@
         <!-- 申请实验室时的表单 -->
         <template v-if="formData.applicationType === 'lab'">
           <a-form-item label="选择实验室" name="labId">
-            <a-select v-model:value="formData.labId" placeholder="请选择要申请的实验室" show-search :filter-option="filterOption"
-              @change="handleLabChange" :loading="labsLoading">
-              <a-select-option v-for="lab in availableLabs" :key="lab.id" :value="lab.id"
-                :label="`${lab.labName || ''} ${lab.location || ''}`" :disabled="lab.status !== 1">
+            <a-select v-model:value="formData.labId" placeholder="请选择要申请的实验室" show-search :filter-option="filterOption" @change="handleLabChange" :loading="labsLoading">
+              <a-select-option v-for="lab in availableLabs" :key="lab.id" :value="lab.id" :label="`${lab.labName || ''} ${lab.location || ''}`" :disabled="lab.status !== 1">
                 {{ lab.labName }} - {{ lab.location }}
                 <a-tag :color="getLabStatusColor(lab.status)" size="small">
                   {{ getLabStatusText(lab.status) }}
@@ -44,13 +42,23 @@
 
         <!-- 申请设备时的表单 -->
         <template v-if="formData.applicationType === 'equipment'">
-          <EquipmentApplicationForm :form-data="formData" :available-labs="availableLabs" :labs-loading="labsLoading"
-            :available-equipment="availableEquipment" :equipment-loading="equipmentLoading"
-            :filter-option="filterOption" :filter-equipment-option="filterEquipmentOption"
-            :on-lab-change="handleLabChange" :on-equipment-change="handleEquipmentChange"
-            :get-lab-status-color="getLabStatusColor" :get-lab-status-text="getLabStatusText"
-            :get-equipment-status-color="getEquipmentStatusColor" :get-equipment-status-text="getEquipmentStatusText"
-            :disabled-date="disabledDate" :disabled-time="disabledTime" />
+          <EquipmentApplicationForm
+            :form-data="formData"
+            :available-labs="availableLabs"
+            :labs-loading="labsLoading"
+            :available-equipment="availableEquipment"
+            :equipment-loading="equipmentLoading"
+            :filter-option="filterOption"
+            :filter-equipment-option="filterEquipmentOption"
+            :on-lab-change="handleLabChange"
+            :on-equipment-change="handleEquipmentChange"
+            :get-lab-status-color="getLabStatusColor"
+            :get-lab-status-text="getLabStatusText"
+            :get-equipment-status-color="getEquipmentStatusColor"
+            :get-equipment-status-text="getEquipmentStatusText"
+            :disabled-date="disabledDate"
+            :disabled-time="disabledTime"
+          />
         </template>
 
         <a-form-item v-if="formData.applicationType === 'lab'" label="使用目的" name="purpose">
@@ -59,11 +67,8 @@
 
         <!-- 申请实验室：使用时间从后端可申请时间段中选择 -->
         <a-form-item v-if="formData.applicationType === 'lab'" label="使用时间" name="scheduleId">
-          <a-select v-model:value="formData.scheduleId" placeholder="请先选择实验室，再选择可申请时间段" :loading="scheduleLoading"
-            :disabled="!formData.labId" @change="onScheduleChange">
-            <a-select-option v-for="s in labScheduleList" :key="s.id" :value="s.id"> {{ formatScheduleTime(s.startTime)
-            }} 至 {{
-                formatScheduleTime(s.endTime) }} </a-select-option>
+          <a-select v-model:value="formData.scheduleId" placeholder="请先选择实验室，再选择可申请时间段" :loading="scheduleLoading" :disabled="!formData.labId" @change="onScheduleChange">
+            <a-select-option v-for="s in labScheduleList" :key="s.id" :value="s.id"> {{ formatScheduleTime(s.startTime) }} 至 {{ formatScheduleTime(s.endTime) }} </a-select-option>
           </a-select>
         </a-form-item>
 
@@ -90,7 +95,7 @@
         </a-form-item>
 
         <a-form-item label="联系方式" name="contactInfo">
-          <a-input v-model:value="formData.contactInfo" placeholder="请输入联系电话或邮箱" />
+          <a-input v-model:value="formData.contactInfo" placeholder="请输入联系电话" />
         </a-form-item>
 
         <a-space>
@@ -150,8 +155,7 @@
     </a-card>
 
     <!-- 设备信息卡片 -->
-    <a-card v-if="formData.applicationType === 'equipment' && selectedEquipment" title="设备信息"
-      class="equipment-info-card">
+    <a-card v-if="formData.applicationType === 'equipment' && selectedEquipment" title="设备信息" class="equipment-info-card">
       <div class="equipment-info">
         <a-descriptions :column="1" size="small">
           <a-descriptions-item label="设备名称">
@@ -186,8 +190,7 @@
                 <a @click="viewDocument(item.id)">{{ item.title }}</a>
               </template>
               <template #description>
-                <a-tag :color="getDocTypeColor(item.docType || item.doc_type)" size="small">{{
-                  getDocTypeText(item.docType || item.doc_type) }}</a-tag>
+                <a-tag :color="getDocTypeColor(item.docType || item.doc_type)" size="small">{{ getDocTypeText(item.docType || item.doc_type) }}</a-tag>
                 <span class="doc-time">{{ formatDocTime(item.createTime) }}</span>
               </template>
             </a-list-item-meta>
@@ -198,8 +201,7 @@
 
     <!-- 申请预览模态框 -->
     <a-modal v-model:open="previewVisible" title="申请预览" width="800px" :footer="null">
-      <div class="preview-content"
-        v-if="(formData.applicationType === 'lab' && formData.labId) || (formData.applicationType === 'equipment' && formData.equipmentId)">
+      <div class="preview-content" v-if="(formData.applicationType === 'lab' && formData.labId) || (formData.applicationType === 'equipment' && formData.equipmentId)">
         <a-descriptions :column="2" bordered>
           <a-descriptions-item label="申请类型">
             {{ formData.applicationType === 'lab' ? '申请实验室' : '申请设备' }}
@@ -207,31 +209,23 @@
           <a-descriptions-item label="使用类型">
             {{ formData.usageType === 'personal' ? '个人使用' : '课程使用' }}
           </a-descriptions-item>
-          <a-descriptions-item v-if="formData.applicationType === 'lab'" label="实验室"> {{ selectedLab?.labName }}（{{
-            selectedLab?.labNumber }}） - {{ selectedLab?.location }} </a-descriptions-item>
+          <a-descriptions-item v-if="formData.applicationType === 'lab'" label="实验室"> {{ selectedLab?.labName }}（{{ selectedLab?.labNumber }}） - {{ selectedLab?.location }} </a-descriptions-item>
           <a-descriptions-item v-if="formData.usageType === 'course'" label="课程名称">
             {{ formData.courseName }}
           </a-descriptions-item>
           <a-descriptions-item v-if="formData.usageType === 'course'" label="班级">
             {{ formData.className }}
           </a-descriptions-item>
-          <a-descriptions-item v-if="formData.applicationType === 'equipment'" label="设备"> {{ selectedEquipment?.name }}
-            ({{
-              selectedEquipment?.model }}) </a-descriptions-item>
+          <a-descriptions-item v-if="formData.applicationType === 'equipment'" label="设备"> {{ selectedEquipment?.name }} ({{ selectedEquipment?.model }}) </a-descriptions-item>
           <a-descriptions-item label="使用目的" :span="2">
             {{ formData.purpose }}
           </a-descriptions-item>
           <a-descriptions-item label="使用时间">
-            {{ formData.applicationType === 'lab' ? formatSelectedScheduleTime() : formatTimeRange(formData.timeRange)
-            }}
+            {{ formData.applicationType === 'lab' ? formatSelectedScheduleTime() : formatTimeRange(formData.timeRange) }}
           </a-descriptions-item>
-          <a-descriptions-item :label="formData.applicationType === 'lab' ? '预计人数' : '借用数量'"> {{
-            formData.participantCount
-          }} {{ formData.applicationType === 'lab' ? '人' : '台' }} </a-descriptions-item>
-          <a-descriptions-item v-if="formData.applicationType === 'lab' && labEquipmentList?.length" label="实验室具有的设备"
-            :span="2">
-            <a-tag v-for="eq in labEquipmentList" :key="eq.id" size="small" color="blue"> {{ eq.equipmentName ||
-              eq.equipment_name }}{{ eq.model ? `（${eq.model}）` : '' }} </a-tag>
+          <a-descriptions-item :label="formData.applicationType === 'lab' ? '预计人数' : '借用数量'"> {{ formData.participantCount }} {{ formData.applicationType === 'lab' ? '人' : '台' }} </a-descriptions-item>
+          <a-descriptions-item v-if="formData.applicationType === 'lab' && labEquipmentList?.length" label="实验室具有的设备" :span="2">
+            <a-tag v-for="eq in labEquipmentList" :key="eq.id" size="small" color="blue"> {{ eq.equipmentName || eq.equipment_name }}{{ eq.model ? `（${eq.model}）` : '' }} </a-tag>
           </a-descriptions-item>
           <a-descriptions-item label="特殊要求" :span="2">
             {{ formData.specialRequirements || '无' }}
@@ -592,6 +586,7 @@ const handleSubmit = async () => {
       studentCount: formData.participantCount,
       startTime: slot.startTime,
       endTime: slot.endTime,
+      applicantPhone: formData.contactInfo,
       labNumber: lab.labNumber,
       labName: lab.labName,
       location: lab.location
@@ -603,7 +598,6 @@ const handleSubmit = async () => {
     submitLabApplication(payload)
       .then(() => {
         message.success('申请提交成功！')
-        router.push('/')
       })
       .finally(() => {
         submitting.value = false
@@ -634,13 +628,13 @@ const handleSubmit = async () => {
       quantity: formData.participantCount,
       purpose: formData.purpose,
       startTime,
-      endTime
+      endTime,
+      applicantPhone: formData.contactInfo
     }
 
     submitEquipmentApplication(payload)
       .then(() => {
         message.success('申请提交成功！')
-        router.push('/')
       })
       .finally(() => {
         submitting.value = false
@@ -739,5 +733,6 @@ const loadProtocolDocs = () => {
   font-size: 12px;
 }
 
-@media (max-width: 768px) {}
+@media (max-width: 768px) {
+}
 </style>
